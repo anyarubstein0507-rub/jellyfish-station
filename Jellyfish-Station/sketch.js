@@ -1,6 +1,6 @@
 // ============================================================
 // Jellyfish Observation Station — Israel Aquarium
-// sketch.js v4
+// sketch.js v5 — RTL fix, layout polish, loading titles
 // ============================================================
 
 let state = "WELCOME";
@@ -10,13 +10,14 @@ let database = [];
 let penSize = 3;
 let loadingCounter = 0;
 let fontBold, fontRegular, loadingImage;
+let ctx; // raw canvas 2D context for RTL text
 
 // ── Color Palette ───────────────────────────────────────────
-const LILAC = [156, 161, 209];
-const WHITE = 255;
-const INK_GRAY  = 160;
+const LILAC    = [156, 161, 209];
+const WHITE    = 255;
+const INK_GRAY = 160;
 
-// ── Icon diameter — home V and plus circle must match exactly
+// ── Icon diameter ────────────────────────────────────────────
 const ICON_D = 85;
 
 // ── Hex grid ─────────────────────────────────────────────────
@@ -24,13 +25,11 @@ const GRID_COLS  = 5;
 const GRID_ROWS  = 4;
 const HEX_OFFSET = 0.5;
 
-// ── Column layout (shared across WELCOME, DRAWING, LOADING) ──
-// Three equal columns, each 500px wide
-// Centers: EN=330, AR=960, HE=1590
-const COL_W = 500;
-const COL_EN_X = 330 - COL_W / 2;   // left edge of English col
-const COL_AR_X = 960 - COL_W / 2;   // left edge of Arabic col
-const COL_HE_X = 1590 - COL_W / 2;  // left edge of Hebrew col
+// ── Column centers (1920px canvas) ──────────────────────────
+const COL_W    = 500;
+const COL_EN_C = 330;   // center X of English column
+const COL_AR_C = 960;   // center X of Arabic column
+const COL_HE_C = 1590;  // center X of Hebrew column
 
 // ── Trilingual instruction copy ──────────────────────────────
 const PHASES = [
@@ -66,6 +65,8 @@ function preload() {
 function setup() {
   createCanvas(1920, 1080);
   textFont(fontRegular);
+  // Grab raw canvas context for RTL rendering
+  ctx = document.querySelector('canvas').getContext('2d');
 }
 
 // ============================================================
@@ -80,30 +81,79 @@ function draw() {
 }
 
 // ============================================================
-// HELPER — draw three-column trilingual text block
-// colTop: Y position for top of text
-// sizes: { en, ar, he } font sizes (default all 20)
-// loading copy replaces phase copy when isLoading=true
+// RTL TEXT HELPER
+// Renders a wrapped RTL string (Hebrew or Arabic) using the
+// raw canvas context, which respects unicode-bidi correctly.
+// x, y = top-left of the text block; maxW = wrap width
+// fontStr = full CSS font string e.g. "20px AbrahamRegular"
+// color = CSS color string e.g. "rgb(255,255,255)"
 // ============================================================
-function drawTrilingualColumns(colTop, txtSize, enStr, arStr, heStr) {
+function rtlText(str, x, y, maxW, fontStr, colorStr, centerAlign) {
+  ctx.save();
+  ctx.direction = 'rtl';
+  ctx.font      = fontStr;
+  ctx.fillStyle = colorStr;
+  ctx.textAlign = centerAlign ? 'center' : 'right';
+
+  // Manual word-wrap
+  let words    = str.split(' ');
+  let line     = '';
+  let lineH    = parseInt(fontStr) * 1.55;
+  let curY     = y + parseInt(fontStr); // baseline offset
+
+  for (let w of words) {
+    let test = line ? line + ' ' + w : w;
+    if (ctx.measureText(test).width > maxW && line) {
+      let drawX = centerAlign ? x + maxW / 2 : x + maxW;
+      ctx.fillText(line, drawX, curY);
+      line = w;
+      curY += lineH;
+    } else {
+      line = test;
+    }
+  }
+  if (line) {
+    let drawX = centerAlign ? x + maxW / 2 : x + maxW;
+    ctx.fillText(line, drawX, curY);
+  }
+
+  ctx.restore();
+}
+
+// ============================================================
+// TRILINGUAL COLUMN BLOCK
+// Draws EN (p5 LTR), AR (RTL), HE (RTL) side by side
+// fontSz: px size for all three
+// enColor / arColor / heColor: p5 color values (numbers)
+// boldTitles: if true uses Abraham Bold font string
+// ============================================================
+function drawTrilingualColumns(colTop, fontSz, enStr, arStr, heStr,
+                                enColor, arColor, heColor, useBold) {
+  let fName  = useBold ? 'AbrahamBold' : 'AbrahamRegular';
+  let fStr   = fontSz + 'px ' + fName;
+  let lineH  = fontSz * 1.55;
+
+  // ── English — p5 LTR, center-aligned ─────────────────────
   noStroke();
-  textFont(fontRegular);
-  textSize(txtSize || 20);
-
-  // English — left col, center-aligned within col
-  fill(INK_GRAY);
+  fill(enColor !== undefined ? enColor : INK_GRAY);
+  textFont(useBold ? fontBold : fontRegular);
+  textSize(fontSz);
   textAlign(CENTER, TOP);
-  text(enStr, COL_EN_X, colTop, COL_W);
+  text(enStr, COL_EN_C - COL_W / 2, colTop, COL_W);
 
-  // Arabic — middle col, center-aligned within col
-  fill(INK_GRAY);
-  textAlign(CENTER, TOP);
-  text(arStr, COL_AR_X, colTop, COL_W);
+  // ── Arabic — RTL via raw canvas, center-aligned ───────────
+  let arCSS = colorToCSS(arColor !== undefined ? arColor : INK_GRAY);
+  rtlText(arStr, COL_AR_C - COL_W / 2, colTop, COL_W, fStr, arCSS, true);
 
-  // Hebrew — right col, center-aligned within col
-  fill(WHITE);
-  textAlign(CENTER, TOP);
-  text(heStr, COL_HE_X, colTop, COL_W);
+  // ── Hebrew — RTL via raw canvas, center-aligned ───────────
+  let heCSS = colorToCSS(heColor !== undefined ? heColor : WHITE);
+  rtlText(heStr, COL_HE_C - COL_W / 2, colTop, COL_W, fStr, heCSS, true);
+}
+
+// Convert p5 color number or array to CSS string
+function colorToCSS(c) {
+  if (Array.isArray(c)) return `rgb(${c[0]},${c[1]},${c[2]})`;
+  return `rgb(${c},${c},${c})`;
 }
 
 // ============================================================
@@ -112,40 +162,45 @@ function drawTrilingualColumns(colTop, txtSize, enStr, arStr, heStr) {
 function drawWelcome() {
   noStroke();
 
-  // ── Titles — centered at top ──────────────────────────────
+  // ── Titles — centered, using p5 (Latin layout is fine) ───
   textFont(fontBold);
   textSize(60);
   textAlign(CENTER, TOP);
 
-  fill(...LILAC);
-  text("תחנת תצפית מדוזות", width / 2, 150);
-  fill(WHITE);
-  text("محطة مراقبة قنديل البحر", width / 2, 235);
+  // Hebrew title — RTL raw canvas
+  rtlText("תחנת תצפית מדוזות", width/2 - 400, 130, 800,
+    '60px AbrahamBold', `rgb(${LILAC[0]},${LILAC[1]},${LILAC[2]})`, true);
+
+  // Arabic title — RTL raw canvas
+  rtlText("محطة مراقبة قنديل البحر", width/2 - 500, 210, 1000,
+    '60px AbrahamBold', 'rgb(255,255,255)', true);
+
+  // English title — p5 LTR
   fill(INK_GRAY);
-  text("Jellyfish Observation Station", width / 2, 320);
+  textAlign(CENTER, TOP);
+  text("Jellyfish Observation Station", width / 2, 295);
 
   // ── Three-column paragraphs ───────────────────────────────
   drawTrilingualColumns(
-    430, 20,
+    410, 20,
     "The Israel Aquarium researches jellyfish reproduction. Anya, a Visual Communications student at Bezalel, created her own 'Reproduction Project' for a scientific illustration course. You can participate by adding your jellyfish. There is no right or wrong: every observation is unique, and together we create something beautiful.",
     "يقوم الأكواريوم الإسرائيلي بالبحث في عملية تكاثر قناديل البحر. أنيا، طالبة الاتصالات المرئية في بتسلئيل، أنشأت 'مشروع التكاثر' كجزء من مساق الرسوم التوضيحية العلمية. يمكنك المشاركة في هذا المشروع التفاعلي عن طريق إضافة قنديل البحر الخاص بك إلى ملاحظات الآخرين. تذكر: لا يوجد صح أو خطأ في الملاحظة.",
-    "האקווריום הישראלי חוקר את תהליך הרבייה של מדוזות. אניה, סטודנטית לתקשורת חזותית בבצלאל, יצרה את 'פרויקט רבייה' כחלק מקורס איור מדעי. תוכלו לקחת חלק בפרויקט ולהוסיף מדוזה משלכם לתצפיות של אחרים. זכרו: אין נכון או לא נכון בתצפית. לכל אחד מאיתנו חוויה ייחודית, ויחד ניצור משהו יפה."
+    "האקווריום הישראלי חוקר את תהליך הרבייה של מדוזות. אניה, סטודנטית לתקשורת חזותית בבצלאל, יצרה את 'פרויקט רבייה' כחלק מקורס איור מדעי. תוכלו לקחת חלק בפרויקט ולהוסיף מדוזה משלכם לתצפיות של אחרים. זכרו: אין נכון או לא נכון בתצפית. לכל אחד מאיתנו חוויה ייחודית, ויחד ניצור משהו יפה.",
+    INK_GRAY, INK_GRAY, WHITE
   );
 
-  // ── Plus button — moved up to Y=880 ─────────────────────
+  // ── Plus button ───────────────────────────────────────────
   drawPlusIcon(width / 2, 880);
 }
 
 // ============================================================
 // SCREEN 2 — DRAWING
 // ============================================================
-
-// Returns the bounding box rect for the drawing canvas
 function boxBounds() {
   let bw = width  * 0.52;
-  let bh = height * 0.55;   // slightly shorter to give room below
+  let bh = height * 0.50;
   let bx = (width  - bw) / 2;
-  let by = height * 0.06;   // sits near top, leaving room for text below
+  let by = height * 0.05;
   return { bx, by, bw, bh };
 }
 
@@ -161,13 +216,11 @@ function drawCanvas() {
   stroke(211);
   strokeWeight(penSize);
   noFill();
-
   for (let path of drawings[currentPhase - 1]) {
     beginShape();
     for (let p of path) vertex(p.x, p.y);
     endShape();
   }
-
   if (mouseIsPressed && isInsideBox(mouseX, mouseY)) {
     let cur = drawings[currentPhase - 1];
     if (cur.length > 0) cur[cur.length - 1].push({ x: mouseX, y: mouseY });
@@ -183,31 +236,29 @@ function drawDrawingInstructions() {
   let { by, bh } = boxBounds();
   const boxBottom = by + bh;
 
-  // ── Phase dots — 20px below box bottom ───────────────────
-  const DOT_Y   = boxBottom + 20;
-  const DOTS_GAP = 20;
-
+  // Phase dots — 24px gap below box
+  const DOT_Y = boxBottom + 30;
   for (let i = 1; i <= 3; i++) {
-    let dx = width / 2 + (i - 2) * DOTS_GAP;
+    let dx = width / 2 + (i - 2) * 20;
     if (i === currentPhase) {
-      fill(WHITE); noStroke();
-      ellipse(dx, DOT_Y, 8, 8);
+      fill(WHITE); noStroke(); ellipse(dx, DOT_Y, 8, 8);
     } else {
-      noFill(); stroke(INK_GRAY); strokeWeight(1);
-      ellipse(dx, DOT_Y, 8, 8);
+      noFill(); stroke(INK_GRAY); strokeWeight(1); ellipse(dx, DOT_Y, 8, 8);
     }
   }
+  noStroke();
 
-  // ── Three-column instructions — 20px below dots ──────────
+  // Instructions — 20px below dots
   const TEXT_TOP = DOT_Y + 20;
   const p = PHASES[currentPhase - 1];
-  drawTrilingualColumns(TEXT_TOP, 18, p.en, p.ar, p.he);
+  drawTrilingualColumns(TEXT_TOP, 18, p.en, p.ar, p.he,
+    INK_GRAY, INK_GRAY, WHITE);
 }
 
 function drawUI() {
-  let btnH = 44;
-  let btnW = 160;
-  let btnY = height - 70;
+  // Buttons sit higher — 110px from bottom
+  let btnH = 44, btnW = 160;
+  let btnY = height - 110;
   drawRoundedButton(width / 2 - btnW - 20, btnY, btnW, btnH, "אתחול", "RESTART");
   drawRoundedButton(width / 2 + 20,        btnY, btnW, btnH, "שליחה",  "SEND");
 }
@@ -236,13 +287,25 @@ function drawLoading() {
   imageMode(CENTER);
   image(loadingImage, width / 2, height * 0.36 + yFloat, 340, 340);
 
-  // Three-column loading text below image
-  drawTrilingualColumns(
-    height * 0.64, 20,
-    "Your jellyfish is going through a reproduction phase. It will join the others soon.",
-    "قنديل البحر الخاص بك يمر بمرحلة التكاثر وسينضم إلى الآخرين قريباً",
-    "המדוזה שלך עוברת תהליך רבייה ובקרוב תצטרף לאחרות"
-  );
+  // Loading titles — same style as home titles, half size (30px)
+  // Hebrew — Lilac
+  rtlText("המדוזה שלך עוברת תהליך רבייה ובקרוב תצטרף לאחרות",
+    width/2 - 500, height * 0.63, 1000,
+    '30px AbrahamBold', `rgb(${LILAC[0]},${LILAC[1]},${LILAC[2]})`, true);
+
+  // Arabic — White
+  rtlText("قنديل البحر الخاص بك يمر بمرحلة التكاثر وسينضم إلى الآخرين قريباً",
+    width/2 - 500, height * 0.63 + 52, 1000,
+    '30px AbrahamBold', 'rgb(255,255,255)', true);
+
+  // English — Gray, p5 LTR
+  noStroke();
+  fill(INK_GRAY);
+  textFont(fontBold);
+  textSize(30);
+  textAlign(CENTER, TOP);
+  text("Your jellyfish is going through a reproduction phase. It will join the others soon.",
+    width/2 - 500, height * 0.63 + 104, 1000);
 
   loadingCounter++;
   if (loadingCounter > 240) {
@@ -258,18 +321,15 @@ function drawLoading() {
 function drawGallery() {
   for (let jelly of database) {
     let yFloat = sin(frameCount * jelly.speed + jelly.seed) * jelly.amplitude;
-
     push();
     translate(jelly.x, jelly.y + yFloat);
     scale(0.28);
     stroke(211);
     strokeWeight(penSize * 3.5);
     noFill();
-
     let { bx, by, bw, bh } = boxBounds();
     let cx = bx + bw / 2;
     let cy = by + bh / 2;
-
     for (let path of jelly.frames[jelly.phaseIdx]) {
       beginShape();
       for (let p of path) vertex(p.x - cx, p.y - cy);
@@ -277,9 +337,6 @@ function drawGallery() {
     }
     pop();
   }
-
-  // Bottom nav — home bottom-left, plus bottom-right
-  // Inset by ICON_D so icons don't touch edges
   drawHomeIcon(ICON_D, height - ICON_D);
   drawPlusIcon(width - ICON_D, height - ICON_D);
 }
@@ -287,100 +344,64 @@ function drawGallery() {
 // ============================================================
 // ICONS
 // ============================================================
-
-// Plus — circle with crosshair. Diameter = ICON_D
 function drawPlusIcon(x, y) {
   let hovered = dist(mouseX, mouseY, x, y) < 60;
   let c = hovered ? WHITE : INK_GRAY;
-  noFill();
-  stroke(c);
-  strokeWeight(1.5);
+  noFill(); stroke(c); strokeWeight(1.5);
   ellipse(x, y, ICON_D, ICON_D);
   line(x - 16, y, x + 16, y);
   line(x, y - 16, x, y + 16);
 }
 
-// Home — V-shape roof (two diagonal lines meeting at peak) +
-// open rectangle body (no door, no top line).
-// Bounding box = ICON_D × ICON_D, slightly rounded corners.
+// Home: V-roof + open square body, no door
 function drawHomeIcon(x, y) {
   let hovered = dist(mouseX, mouseY, x, y) < 60;
   let c = hovered ? WHITE : INK_GRAY;
+  stroke(c); strokeWeight(1.5); noFill();
 
-  stroke(c);
-  strokeWeight(1.5);
-  noFill();
+  let half     = ICON_D * 0.36;
+  let bodyH    = ICON_D * 0.38;
+  let roofH    = ICON_D * 0.28;
+  let ovr      = ICON_D * 0.06;
+  let bodyTop  = y - bodyH / 2 + roofH * 0.3;
+  let bodyBot  = bodyTop + bodyH;
+  let peakY    = bodyTop - roofH;
+  let bodyL    = x - half;
+  let bodyR    = x + half;
 
-  // Proportions relative to ICON_D
-  let half  = ICON_D * 0.36;   // half-width of body
-  let bodyH = ICON_D * 0.38;   // height of body rectangle
-  let roofH = ICON_D * 0.28;   // height of the V peak above body top
-  let ovr   = ICON_D * 0.06;   // overhang on each side beyond body
-
-  // Key Y positions
-  let bodyTop    = y - bodyH / 2 + roofH * 0.3;
-  let bodyBottom = bodyTop + bodyH;
-  let peakY      = bodyTop - roofH;
-
-  // Key X positions
-  let bodyL = x - half;
-  let bodyR = x + half;
-
-  // V-shape roof: two straight lines from overhang points to peak
-  line(bodyL - ovr, bodyTop, x, peakY);  // left slope
-  line(bodyR + ovr, bodyTop, x, peakY);  // right slope
-
-  // Body: open rectangle (3 sides — no top line)
-  // Left wall
-  line(bodyL, bodyTop, bodyL, bodyBottom);
-  // Right wall
-  line(bodyR, bodyTop, bodyR, bodyBottom);
-  // Floor (with slight rounding via rect trick — use lines for simplicity)
-  line(bodyL, bodyBottom, bodyR, bodyBottom);
+  // V roof
+  line(bodyL - ovr, bodyTop, x, peakY);
+  line(bodyR + ovr, bodyTop, x, peakY);
+  // Body — 3 sides, no top
+  line(bodyL, bodyTop, bodyL, bodyBot);
+  line(bodyR, bodyTop, bodyR, bodyBot);
+  line(bodyL, bodyBot, bodyR, bodyBot);
 }
 
 // ============================================================
 // MOUSE EVENTS
 // ============================================================
 function mousePressed() {
-
   if (state === "WELCOME") {
-    if (dist(mouseX, mouseY, width / 2, 880) < 60) {
-      state = "DRAWING";
-    }
+    if (dist(mouseX, mouseY, width / 2, 880) < 60) state = "DRAWING";
   }
-
   else if (state === "DRAWING") {
-    if (isInsideBox(mouseX, mouseY)) {
-      drawings[currentPhase - 1].push([]);
-    }
+    if (isInsideBox(mouseX, mouseY)) drawings[currentPhase - 1].push([]);
 
-    let btnH = 44, btnW = 160;
-    let btnY = height - 70;
-
-    // RESTART
+    let btnH = 44, btnW = 160, btnY = height - 110;
     let rx = width / 2 - btnW - 20;
-    if (mouseX > rx && mouseX < rx + btnW && mouseY > btnY && mouseY < btnY + btnH) {
+    if (mouseX > rx && mouseX < rx + btnW && mouseY > btnY && mouseY < btnY + btnH)
       drawings[currentPhase - 1] = [];
-    }
 
-    // SEND
     let sx = width / 2 + 20;
     if (mouseX > sx && mouseX < sx + btnW && mouseY > btnY && mouseY < btnY + btnH) {
       if (currentPhase < 3) currentPhase++;
       else state = "LOADING";
     }
   }
-
   else if (state === "GALLERY") {
-    if (dist(mouseX, mouseY, ICON_D, height - ICON_D) < 60) {
-      resetDrawing();
-      state = "WELCOME";
-    }
-    if (dist(mouseX, mouseY, width - ICON_D, height - ICON_D) < 60) {
-      resetDrawing();
-      state = "DRAWING";
-    }
+    if (dist(mouseX, mouseY, ICON_D, height - ICON_D) < 60) { resetDrawing(); state = "WELCOME"; }
+    if (dist(mouseX, mouseY, width - ICON_D, height - ICON_D) < 60) { resetDrawing(); state = "DRAWING"; }
   }
 }
 
@@ -390,24 +411,17 @@ function mousePressed() {
 function addToDatabase() {
   let cellW = width  / GRID_COLS;
   let cellH = height / GRID_ROWS;
-
-  let idx = database.length % (GRID_COLS * GRID_ROWS);
-  let col = idx % GRID_COLS;
-  let row = floor(idx / GRID_COLS);
-
+  let idx   = database.length % (GRID_COLS * GRID_ROWS);
+  let col   = idx % GRID_COLS;
+  let row   = floor(idx / GRID_COLS);
   let hexShift = (row % 2 === 1) ? cellW * HEX_OFFSET : 0;
-  let cx = col * cellW + cellW / 2 + hexShift;
+  let cx = (col * cellW + cellW / 2 + hexShift) % width;
   let cy = row * cellH + cellH / 2;
-  cx = cx % width;
-
-  let jx = cx + random(-cellW * 0.22, cellW * 0.22);
-  let jy = cy + random(-cellH * 0.22, cellH * 0.22);
-
   database.push({
     frames:    JSON.parse(JSON.stringify(drawings)),
     phaseIdx:  floor(random(3)),
-    x:         jx,
-    y:         jy,
+    x:         cx + random(-cellW * 0.22, cellW * 0.22),
+    y:         cy + random(-cellH * 0.22, cellH * 0.22),
     seed:      random(TWO_PI),
     speed:     random(0.018, 0.038),
     amplitude: random(12, 28)
