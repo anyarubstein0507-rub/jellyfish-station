@@ -48,13 +48,12 @@ const GRID_ROWS  = 4;
 const HEX_OFFSET = 0.5;
 
 const PHASE_FRAMES   = 45;
-const LOADING_FRAMES = 360; // 6 seconds at 60fps
+const LOADING_FRAMES = 360;
 
-// Logo height in design px
 const LOGO_H   = 40;
-const LOGO_X   = 50;  // left edge
-const LOGO_Y   = 30;  // top edge
-const LOGO_GAP = 30;  // gap between logos
+const LOGO_X   = 50;
+const LOGO_Y   = 30;
+const LOGO_GAP = 30;
 
 let state          = 'WELCOME';
 let currentPhase   = 1;
@@ -96,19 +95,18 @@ const PHASE_TEXT = [
 document.fonts.ready.then(() => requestAnimationFrame(loop));
 
 // ============================================================
-// LOGOS — drawn on every screen, top left
+// LOGOS
 // ============================================================
 function drawLogos() {
-  // Only draw once both images are loaded
-  if (!bezalelImg.complete || !aquariumImg.complete) return;
+  if (bezalelImg.complete && bezalelImg.naturalWidth > 0) {
+    let bezW = (bezalelImg.naturalWidth / bezalelImg.naturalHeight) * LOGO_H;
+    ctx.drawImage(bezalelImg, LOGO_X, LOGO_Y, bezW, LOGO_H);
 
-  // Bezalel — scale to LOGO_H, preserve aspect ratio
-  let bezW = (bezalelImg.naturalWidth / bezalelImg.naturalHeight) * LOGO_H;
-  ctx.drawImage(bezalelImg, LOGO_X, LOGO_Y, bezW, LOGO_H);
-
-  // Aquarium — same height, placed to the right with gap
-  let aqW = (aquariumImg.naturalWidth / aquariumImg.naturalHeight) * LOGO_H;
-  ctx.drawImage(aquariumImg, LOGO_X + bezW + LOGO_GAP, LOGO_Y, aqW, LOGO_H);
+    if (aquariumImg.complete && aquariumImg.naturalWidth > 0) {
+      let aqW = (aquariumImg.naturalWidth / aquariumImg.naturalHeight) * LOGO_H;
+      ctx.drawImage(aquariumImg, LOGO_X + bezW + LOGO_GAP, LOGO_Y, aqW, LOGO_H);
+    }
+  }
 }
 
 // ============================================================
@@ -124,9 +122,7 @@ function loop() {
   else if (state === 'LOADING') drawLoading();
   else if (state === 'GALLERY') drawGallery();
 
-  // Logos appear on every screen
   drawLogos();
-
   requestAnimationFrame(loop);
 }
 
@@ -140,7 +136,6 @@ function drawWelcome() {
   ctx.save();
   ctx.textBaseline = 'top';
 
-  // Titles
   ctx.font = F_BOLD(60); ctx.fillStyle = C_LILAC;
   ctx.direction = 'rtl'; ctx.textAlign = 'center';
   ctx.fillText('תחנת תצפית מדוזות', 960, 150);
@@ -153,7 +148,6 @@ function drawWelcome() {
   ctx.direction = 'ltr'; ctx.textAlign = 'center';
   ctx.fillText('Jellyfish Observation Station', 960, 320);
 
-  // English — left-aligned, left edge X=60
   ctx.font = F_REG(20); ctx.fillStyle = C_GRAY;
   ctx.direction = 'ltr'; ctx.textAlign = 'left';
   ctx.fillText('The Israel Aquarium researches jellyfish reproduction.',   60, PY + LH * 0);
@@ -163,7 +157,6 @@ function drawWelcome() {
   ctx.fillText('jellyfish. There is no right or wrong: every observation', 60, PY + LH * 4);
   ctx.fillText('is unique, and together we create something beautiful.',   60, PY + LH * 5);
 
-  // Arabic — right-aligned, right edge X=1250
   ctx.font = F_REG(20); ctx.fillStyle = C_GRAY;
   ctx.direction = 'rtl'; ctx.textAlign = 'right';
   ctx.fillText('يقوم الأكواريوم الإسرائيلي بالبحث في عملية تكاثر قناديل البحر.',        1250, PY + LH * 0);
@@ -173,7 +166,6 @@ function drawWelcome() {
   ctx.fillText('أنه لا يوجد صح أو خطأ في الملاحظة: كل ملاحظة فريدة،',                  1250, PY + LH * 4);
   ctx.fillText('ومعاً نبتكر شيئاً جميلاً.',                                              1250, PY + LH * 5);
 
-  // Hebrew — right-aligned, right edge X=1860
   ctx.font = F_REG(20); ctx.fillStyle = C_WHITE;
   ctx.direction = 'rtl'; ctx.textAlign = 'right';
   ctx.fillText('האקווריום הישראלי חוקר את תהליך הרבייה של מדוזות.',                     1860, PY + LH * 0);
@@ -184,7 +176,6 @@ function drawWelcome() {
   ctx.fillText('משהו יפה יחד.',                                                          1860, PY + LH * 5);
 
   ctx.restore();
-
   drawPlusIcon(960, 880);
 }
 
@@ -195,6 +186,13 @@ const BOX_X = 461;
 const BOX_Y = 80;
 const BOX_W = 998;
 const BOX_H = 540;
+
+// Dots at Y=654, buttons at Y=970
+// Text midpoint = (654 + 970) / 2 = 812, text is ~17px tall so Y = 812 - 8 = 804
+// But we want equal padding: space above text from dots, space below to buttons
+// Dots bottom = 654+4=658, buttons top = 970
+// Total space = 970 - 658 = 312px. Text at center = 658 + 156 = 814
+const INSTR_Y = 814;
 
 function drawDrawingScreen() {
   // Bounding box
@@ -221,7 +219,7 @@ function drawDrawingScreen() {
   }
   ctx.restore();
 
-  // Phase dots
+  // Phase dots at Y=654
   ctx.save();
   for (let i = 1; i <= 3; i++) {
     let dx = 960 + (i - 2) * 20;
@@ -240,22 +238,29 @@ function drawDrawingScreen() {
   }
   ctx.restore();
 
-  // Instructions
+  // Instructions — centered between dots (Y=654) and buttons (Y=970)
   let p = PHASE_TEXT[currentPhase - 1];
   ctx.save();
-  ctx.textBaseline = 'top';
   ctx.font = F_REG(17);
-  ctx.fillStyle = C_GRAY;  ctx.direction = 'ltr'; ctx.textAlign = 'left';
-  ctx.fillText(p.en, 60, 680);
-  ctx.fillStyle = C_GRAY;  ctx.direction = 'rtl'; ctx.textAlign = 'right';
-  ctx.fillText(p.ar, 1250, 680);
-  ctx.fillStyle = C_WHITE; ctx.direction = 'rtl'; ctx.textAlign = 'right';
-  ctx.fillText(p.he, 1860, 680);
+  ctx.textBaseline = 'middle';
+
+  ctx.fillStyle = C_GRAY;
+  ctx.direction = 'ltr'; ctx.textAlign = 'left';
+  ctx.fillText(p.en, 60, INSTR_Y);
+
+  ctx.fillStyle = C_GRAY;
+  ctx.direction = 'rtl'; ctx.textAlign = 'right';
+  ctx.fillText(p.ar, 1250, INSTR_Y);
+
+  ctx.fillStyle = C_WHITE;
+  ctx.direction = 'rtl'; ctx.textAlign = 'right';
+  ctx.fillText(p.he, 1860, INSTR_Y);
+
   ctx.restore();
 
-  // Buttons
-  drawRoundedButton(960 - 160 - 20, 970, 160, 44, 'להתחיל מחדש', 'Restart');
-  drawRoundedButton(960 + 20,       970, 160, 44, 'שליחה',        'Send');
+  // Buttons — restart wider to fit Hebrew text
+  drawRoundedButton(960 - 220 - 20, 948, 220, 44, 'להתחיל מחדש', 'Restart');
+  drawRoundedButton(960 + 20,       948, 160, 44, 'שליחה',        'Send');
 }
 
 function drawRoundedButton(x, y, w, h, labelHe, labelEn) {
@@ -480,10 +485,11 @@ function onDown(e) {
     if (isInsideBox(p.x, p.y)) {
       drawings[currentPhase - 1].push([{ x: p.x, y: p.y }]);
     }
-    if (isPointerInRect(960 - 160 - 20, 970, 160, 44)) {
+    // Restart button — wider now at x=960-220-20, w=220
+    if (isPointerInRect(960 - 220 - 20, 948, 220, 44)) {
       drawings[currentPhase - 1] = [];
     }
-    if (isPointerInRect(960 + 20, 970, 160, 44)) {
+    if (isPointerInRect(960 + 20, 948, 160, 44)) {
       if (currentPhase < 3) currentPhase++;
       else state = 'LOADING';
     }
