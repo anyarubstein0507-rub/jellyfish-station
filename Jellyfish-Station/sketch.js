@@ -12,28 +12,25 @@ const ctx    = canvas.getContext('2d');
 const W = 1920;
 const H = 1080;
 
-// Scale factor: maps internal coords to actual screen pixels
-let scale = 1;
+// Canvas is always 1920×1080 internally.
+// CSS scales it visually to fit any screen — no coordinate math needed.
+canvas.width  = W;
+canvas.height = H;
 
 function resize() {
-  // Fit canvas inside window maintaining 16:9
-  let ww = window.innerWidth;
-  let wh = window.innerHeight;
-  scale = Math.min(ww / W, wh / H);
-  canvas.width  = W * scale;
-  canvas.height = H * scale;
-  canvas.style.width  = canvas.width  + 'px';
-  canvas.style.height = canvas.height + 'px';
+  let s = Math.min(window.innerWidth / W, window.innerHeight / H);
+  canvas.style.width  = (W * s) + 'px';
+  canvas.style.height = (H * s) + 'px';
 }
-window.addEventListener('resize', () => { resize(); });
+window.addEventListener('resize', resize);
 resize();
 
-// Convert a screen-pixel coordinate to internal design coordinate
+// Convert a screen-pixel coordinate to internal 1920×1080 coordinate
 function toDesign(screenX, screenY) {
   let rect = canvas.getBoundingClientRect();
   return {
-    x: (screenX - rect.left) / scale,
-    y: (screenY - rect.top)  / scale
+    x: (screenX - rect.left) * (W / rect.width),
+    y: (screenY - rect.top)  * (H / rect.height)
   };
 }
 
@@ -124,10 +121,6 @@ function loop() {
   frameCount++;
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Apply scale — all drawing below uses internal W×H coordinates
-  ctx.save();
-  ctx.scale(scale, scale);
-
   // Black background
   ctx.fillStyle = C_BLACK;
   ctx.fillRect(0, 0, W, H);
@@ -137,7 +130,6 @@ function loop() {
   else if (state === 'LOADING') drawLoading();
   else if (state === 'GALLERY') drawGallery();
 
-  ctx.restore();
   requestAnimationFrame(loop);
 }
 
