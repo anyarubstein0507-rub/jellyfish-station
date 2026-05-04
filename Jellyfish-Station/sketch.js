@@ -69,9 +69,9 @@ const jellyImg    = new Image();
 jellyImg.src      = 'Jellyfish_Assets-01.png';
 
 const bezalelImg  = new Image();
-bezalelImg.src    = 'bezalel white.png';
+bezalelImg.src    = 'bezalel_white.png';
 const aquariumImg = new Image();
-aquariumImg.src   = 'Israel Aquarium Logo.png';
+aquariumImg.src   = 'Israel_Aquarium_Logo.png';
 
 const PHASE_TEXT = [
   {
