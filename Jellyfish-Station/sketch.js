@@ -141,74 +141,58 @@ function drawText(str, x, y, maxW, fontStr, color, align, dir) {
 // SCREEN 1 — WELCOME
 // ============================================================
 function drawWelcome() {
-  // ── Titles ────────────────────────────────────────────────
-  drawText('תחנת תצפית מדוזות',
-    460, 150, 1000, F_BOLD(60), C_LILAC, 'center', 'rtl');
-  drawText('محطة مراقبة قنديل البحر',
-    460, 235, 1000, F_BOLD(60), C_WHITE, 'center', 'rtl');
-  drawText('Jellyfish Observation Station',
-    460, 320, 1000, F_BOLD(60), C_GRAY, 'center', 'ltr');
+  const LH = 30;
 
-  // ── English — left column, center X=330, each line Y+28 ──
-  const EX = 330; // center X of English column
-  const EY = 430; // top Y
-  const LH = 28;  // line height
   ctx.save();
-  ctx.font = F_REG(17);
-  ctx.fillStyle = C_GRAY;
-  ctx.direction = 'ltr';
-  ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
-  ctx.fillText('The Israel Aquarium researches jellyfish',         EX, EY + LH * 0);
-  ctx.fillText('reproduction. Anya, a Visual Communications',      EX, EY + LH * 1);
-  ctx.fillText('student at Bezalel, created her own',              EX, EY + LH * 2);
-  ctx.fillText("'Reproduction Project' for a scientific",          EX, EY + LH * 3);
-  ctx.fillText('illustration course. You can participate',         EX, EY + LH * 4);
-  ctx.fillText('by adding your jellyfish. There is no',            EX, EY + LH * 5);
-  ctx.fillText('right or wrong: every observation is',             EX, EY + LH * 6);
-  ctx.fillText('unique, and together we create something',         EX, EY + LH * 7);
-  ctx.fillText('beautiful.',                                        EX, EY + LH * 8);
+
+  // Titles
+  ctx.font = F_BOLD(60); ctx.fillStyle = C_LILAC;
+  ctx.direction = 'rtl'; ctx.textAlign = 'center';
+  ctx.fillText('תחנת תצפית מדוזות', 960, 150);
+
+  ctx.font = F_BOLD(60); ctx.fillStyle = C_WHITE;
+  ctx.direction = 'rtl'; ctx.textAlign = 'center';
+  ctx.fillText('محطة مراقبة قنديل البحر', 960, 235);
+
+  ctx.font = F_BOLD(60); ctx.fillStyle = C_GRAY;
+  ctx.direction = 'ltr'; ctx.textAlign = 'center';
+  ctx.fillText('Jellyfish Observation Station', 960, 320);
+
+  // English — center X=330, 6 lines
+  ctx.font = F_REG(20); ctx.fillStyle = C_GRAY;
+  ctx.direction = 'ltr'; ctx.textAlign = 'center';
+  ctx.fillText('The Israel Aquarium researches jellyfish reproduction.',  330, 430 + LH * 0);
+  ctx.fillText('Anya, a Visual Communications student at Bezalel,',       330, 430 + LH * 1);
+  ctx.fillText("created her own 'Reproduction Project' for a",            330, 430 + LH * 2);
+  ctx.fillText('scientific illustration course. You can participate',     330, 430 + LH * 3);
+  ctx.fillText('by adding your jellyfish. There is no right or wrong:',   330, 430 + LH * 4);
+  ctx.fillText('every observation is unique, and together we',            330, 430 + LH * 5);
+  ctx.fillText('create something beautiful.',                             330, 430 + LH * 6);
+
+  // Arabic — center X=960, 7 lines
+  ctx.font = F_REG(20); ctx.fillStyle = C_GRAY;
+  ctx.direction = 'rtl'; ctx.textAlign = 'center';
+  ctx.fillText('يقوم الأكواريوم الإسرائيلي بالبحث في عملية تكاثر قناديل البحر.',  960, 430 + LH * 0);
+  ctx.fillText('أنيا، طالبة الاتصالات المرئية في بتسلئيل،',                        960, 430 + LH * 1);
+  ctx.fillText('أنشأت مشروع التكاثر كجزء من مساق الرسوم التوضيحية العلمية.',       960, 430 + LH * 2);
+  ctx.fillText('يمكنك المشاركة في هذا المشروع التفاعلي',                           960, 430 + LH * 3);
+  ctx.fillText('عن طريق إضافة قنديل البحر الخاص بك إلى ملاحظات الآخرين.',         960, 430 + LH * 4);
+  ctx.fillText('تذكر: لا يوجد صح أو خطأ في الملاحظة.',                            960, 430 + LH * 5);
+
+  // Hebrew — center X=1590, 7 lines
+  ctx.font = F_REG(20); ctx.fillStyle = C_WHITE;
+  ctx.direction = 'rtl'; ctx.textAlign = 'center';
+  ctx.fillText('האקווריום הישראלי חוקר את תהליך הרבייה של מדוזות.',               1590, 430 + LH * 0);
+  ctx.fillText('אניה, סטודנטית לתקשורת חזותית בבצלאל,',                           1590, 430 + LH * 1);
+  ctx.fillText('יצרה את פרויקט רבייה כחלק מקורס איור מדעי.',                      1590, 430 + LH * 2);
+  ctx.fillText('תוכלו לקחת חלק בפרויקט ולהוסיף מדוזה',                           1590, 430 + LH * 3);
+  ctx.fillText('משלכם לתצפיות של אחרים. זכרו: אין נכון',                          1590, 430 + LH * 4);
+  ctx.fillText('או לא נכון בתצפית. לכל אחד מאיתנו',                              1590, 430 + LH * 5);
+  ctx.fillText('חוויה ייחודית, ויחד ניצור משהו יפה.',                             1590, 430 + LH * 6);
+
   ctx.restore();
 
-  // ── Arabic — middle column, center X=960 ─────────────────
-  const ARX = 960;
-  const ARY = 430;
-  ctx.save();
-  ctx.font = F_REG(17);
-  ctx.fillStyle = C_GRAY;
-  ctx.direction = 'rtl';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
-  ctx.fillText('يقوم الأكواريوم الإسرائيلي بالبحث في عملية',      ARX, ARY + LH * 0);
-  ctx.fillText('تكاثر قناديل البحر. أنيا، طالبة الاتصالات',        ARX, ARY + LH * 1);
-  ctx.fillText('المرئية في بتسلئيل، أنشأت مشروع التكاثر',          ARX, ARY + LH * 2);
-  ctx.fillText('كجزء من مساق الرسوم التوضيحية العلمية.',            ARX, ARY + LH * 3);
-  ctx.fillText('يمكنك المشاركة في هذا المشروع التفاعلي',            ARX, ARY + LH * 4);
-  ctx.fillText('عن طريق إضافة قنديل البحر الخاص بك إلى',           ARX, ARY + LH * 5);
-  ctx.fillText('ملاحظات الآخرين. تذكر: لا يوجد صح أو',             ARX, ARY + LH * 6);
-  ctx.fillText('خطأ في الملاحظة.',                                   ARX, ARY + LH * 7);
-  ctx.restore();
-
-  // ── Hebrew — right column, center X=1590 ─────────────────
-  const HEX = 1590;
-  const HEY = 430;
-  ctx.save();
-  ctx.font = F_REG(17);
-  ctx.fillStyle = C_WHITE;
-  ctx.direction = 'rtl';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
-  ctx.fillText('האקווריום הישראלי חוקר את תהליך הרבייה',           HEX, HEY + LH * 0);
-  ctx.fillText('של מדוזות. אניה, סטודנטית לתקשורת חזותית',         HEX, HEY + LH * 1);
-  ctx.fillText('בבצלאל, יצרה את פרויקט רבייה כחלק מקורס',          HEX, HEY + LH * 2);
-  ctx.fillText('איור מדעי. תוכלו לקחת חלק בפרויקט',                HEX, HEY + LH * 3);
-  ctx.fillText('ולהוסיף מדוזה משלכם לתצפיות של אחרים.',            HEX, HEY + LH * 4);
-  ctx.fillText('זכרו: אין נכון או לא נכון בתצפית.',                 HEX, HEY + LH * 5);
-  ctx.fillText('לכל אחד מאיתנו חוויה ייחודית,',                    HEX, HEY + LH * 6);
-  ctx.fillText('ויחד ניצור משהו יפה.',                               HEX, HEY + LH * 7);
-  ctx.restore();
-
-  // ── Plus button ───────────────────────────────────────────
   drawPlusIcon(960, 880);
 }
 
