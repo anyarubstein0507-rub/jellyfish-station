@@ -16,7 +16,7 @@ const H = 1080;
 const DPR = window.devicePixelRatio || 1;
 canvas.width  = W * DPR;
 canvas.height = H * DPR;
-ctx.scale(DPR, DPR); // scale once at init so all coords stay in 1920x1080 space
+ctx.scale(DPR, DPR);
 
 function resize() {
   let s = Math.min(window.innerWidth / W, window.innerHeight / H);
@@ -117,29 +117,22 @@ function loop() {
 
 // ============================================================
 // CORE TEXT FUNCTION
-// x, y     = exact pixel position of the text baseline anchor
-// maxW     = column width for wrapping (0 = no wrap)
-// align    = 'left' | 'center' | 'right'
-// dir      = 'ltr' | 'rtl'
 // ============================================================
 function drawText(str, x, y, maxW, fontStr, color, align, dir) {
   ctx.save();
-  ctx.font          = fontStr;
-  ctx.fillStyle     = color;
-  ctx.direction     = dir   || 'ltr';
-  ctx.textAlign     = align || 'left';
-  ctx.textBaseline  = 'top';
+  ctx.font         = fontStr;
+  ctx.fillStyle    = color;
+  ctx.direction    = dir   || 'ltr';
+  ctx.textAlign    = align || 'left';
+  ctx.textBaseline = 'top';
 
   if (!maxW) {
-    // Single line, no wrap
     ctx.fillText(str, x, y);
   } else {
-    // Word-wrap within maxW
     let sz     = parseFloat(fontStr);
     let lineH  = sz * 1.65;
     let curY   = y;
 
-    // Anchor X based on alignment
     let anchorX = x;
     if (align === 'center') anchorX = x + maxW / 2;
     if (align === 'right')  anchorX = x + maxW;
@@ -163,57 +156,46 @@ function drawText(str, x, y, maxW, fontStr, color, align, dir) {
 
 // ============================================================
 // SCREEN 1 — WELCOME
-// All positions hardcoded to exact pixel values on 1920×1080
 // ============================================================
 function drawWelcome() {
-
-  // ── Titles ────────────────────────────────────────────────
-  // Hebrew — Lilac, Bold 60px, centered on canvas, Y=150
+  // Titles
   drawText('תחנת תצפית מדוזות',
-    960 - 500, 150, 1000, F_BOLD(60), C_LILAC, 'center', 'rtl');
-
-  // Arabic — White, Bold 60px, centered on canvas, Y=235
+    460, 150, 1000, F_BOLD(60), C_LILAC, 'center', 'rtl');
   drawText('محطة مراقبة قنديل البحر',
-    960 - 500, 235, 1000, F_BOLD(60), C_WHITE, 'center', 'rtl');
-
-  // English — Gray, Bold 60px, centered on canvas, Y=320
+    460, 235, 1000, F_BOLD(60), C_WHITE, 'center', 'rtl');
   drawText('Jellyfish Observation Station',
-    960 - 500, 320, 1000, F_BOLD(60), C_GRAY, 'center', 'ltr');
+    460, 320, 1000, F_BOLD(60), C_GRAY, 'center', 'ltr');
 
-  // ── Paragraphs — three columns, all start at Y=430 ────────
-  // Column width 500px, centers at 330 / 960 / 1590
-
-  // English — left column, center=330, width=560
+  // Paragraphs — three columns, Y=430
+  // English — left, center=330
   drawText(
     'The Israel Aquarium researches jellyfish reproduction. Anya, a Visual Communications student at Bezalel, created her own \'Reproduction Project\' for a scientific illustration course. You can participate by adding your jellyfish. There is no right or wrong: every observation is unique, and together we create something beautiful.',
-    50, 430, 560, F_REG(20), C_GRAY, 'center', 'ltr');
+    50, 430, 580, F_REG(20), C_GRAY, 'center', 'ltr');
 
-  // Arabic — middle column, center=960, width=560
+  // Arabic — middle, center=960
   drawText(
     'يقوم الأكواريوم الإسرائيلي بالبحث في عملية تكاثر قناديل البحر. أنيا، طالبة الاتصالات المرئية في بتسلئيل، أنشأت \'مشروع التكاثر\' كجزء من مساق الرسوم التوضيحية العلمية. يمكنك المشاركة في هذا المشروع التفاعلي عن طريق إضافة قنديل البحر الخاص بك إلى ملاحظات الآخرين. تذكر: لا يوجد صح أو خطأ في الملاحظة.',
-    680, 430, 560, F_REG(20), C_GRAY, 'center', 'rtl');
+    670, 430, 580, F_REG(20), C_GRAY, 'center', 'rtl');
 
-  // Hebrew — right column, center=1590, width=560
+  // Hebrew — right, center=1590
   drawText(
     'האקווריום הישראלי חוקר את תהליך הרבייה של מדוזות. אניה, סטודנטית לתקשורת חזותית בבצלאל, יצרה את \'פרויקט רבייה\' כחלק מקורס איור מדעי. תוכלו לקחת חלק בפרויקט ולהוסיף מדוזה משלכם לתצפיות של אחרים. זכרו: אין נכון או לא נכון בתצפית. לכל אחד מאיתנו חוויה ייחודית, ויחד ניצור משהו יפה.',
-    1310, 430, 560, F_REG(20), C_WHITE, 'center', 'rtl');
+    1290, 430, 580, F_REG(20), C_WHITE, 'center', 'rtl');
 
-  // ── Plus / start button at Y=880 ─────────────────────────
+  // Plus button
   drawPlusIcon(960, 880);
 }
 
 // ============================================================
 // SCREEN 2 — DRAWING
 // ============================================================
-
-// Bounding box: 998×540, centered → X=461, Y=54
 const BOX_X = 461;
 const BOX_Y = 54;
 const BOX_W = 998;
 const BOX_H = 540;
 
 function drawDrawingScreen() {
-  // Bounding box outline
+  // Bounding box
   ctx.save();
   ctx.strokeStyle = C_DIM;
   ctx.lineWidth   = 1.5;
@@ -237,7 +219,7 @@ function drawDrawingScreen() {
   }
   ctx.restore();
 
-  // Phase dots at Y=624 (30px below box bottom)
+  // Phase dots at Y=624
   ctx.save();
   for (let i = 1; i <= 3; i++) {
     let dx = 960 + (i - 2) * 20;
@@ -256,14 +238,10 @@ function drawDrawingScreen() {
   }
   ctx.restore();
 
-  // Instructions at Y=650 — three columns
+  // Instructions at Y=650
   let p = PHASE_TEXT[currentPhase - 1];
-
-  // English — left col
-  drawText(p.en, 50,  650, 560, F_REG(18), C_GRAY,  'center', 'ltr');
-  // Arabic — middle col
+  drawText(p.en,  50, 650, 560, F_REG(18), C_GRAY,  'center', 'ltr');
   drawText(p.ar, 680, 650, 560, F_REG(18), C_GRAY,  'center', 'rtl');
-  // Hebrew — right col
   drawText(p.he, 1310, 650, 560, F_REG(18), C_WHITE, 'center', 'rtl');
 
   // Buttons at Y=970
@@ -283,32 +261,26 @@ function drawRoundedButton(x, y, w, h, labelHe, labelEn) {
   ctx.stroke();
   ctx.restore();
 
-  // Label — measure He + slash + En, center the whole thing
   let fStr = F_REG(14);
   ctx.save();
   ctx.font = fStr;
-
   ctx.direction = 'rtl';
-  let heW = ctx.measureText(labelHe).width;
+  let heW    = ctx.measureText(labelHe).width;
   ctx.direction = 'ltr';
   let slashW = ctx.measureText(' / ').width;
   let enW    = ctx.measureText(labelEn).width;
-
   let totalW = heW + slashW + enW;
   let startX = (x + w / 2) - totalW / 2;
   let midY   = y + h / 2;
 
   ctx.fillStyle    = color;
   ctx.textBaseline = 'middle';
-
-  ctx.direction = 'rtl';
-  ctx.textAlign = 'right';
+  ctx.direction    = 'rtl';
+  ctx.textAlign    = 'right';
   ctx.fillText(labelHe, startX + heW, midY);
-
   ctx.direction = 'ltr';
   ctx.textAlign = 'left';
   ctx.fillText(' / ' + labelEn, startX + heW, midY);
-
   ctx.restore();
 }
 
@@ -316,22 +288,16 @@ function drawRoundedButton(x, y, w, h, labelHe, labelEn) {
 // SCREEN 3 — LOADING
 // ============================================================
 function drawLoading() {
-  // Floating jellyfish image — centered at X=960, Y=389
   let yFloat  = Math.sin(frameCount * 0.05) * 18;
   let imgSize = 340;
   if (jellyImg.complete && jellyImg.naturalWidth > 0) {
     ctx.drawImage(jellyImg, 960 - imgSize / 2, 389 - imgSize / 2 + yFloat, imgSize, imgSize);
   }
 
-  // Hebrew — Lilac, Bold 30px, Y=680
   drawText('המדוזה שלך עוברת תהליך רבייה ובקרוב תצטרף לאחרות',
     460, 680, 1000, F_BOLD(30), C_LILAC, 'center', 'rtl');
-
-  // Arabic — White, Bold 30px, Y=740
   drawText('قنديل البحر الخاص بك يمر بمرحلة التكاثر وسينضم إلى الآخرين قريباً',
     460, 740, 1000, F_BOLD(30), C_WHITE, 'center', 'rtl');
-
-  // English — Gray, Bold 30px, Y=800
   drawText('Your jellyfish is going through a reproduction phase. It will join the others soon.',
     460, 800, 1000, F_BOLD(30), C_GRAY, 'center', 'ltr');
 
@@ -377,9 +343,7 @@ function drawGallery() {
     ctx.restore();
   }
 
-  // Home icon — bottom left
   drawHomeIcon(ICON_D, H - ICON_D);
-  // Plus icon — bottom right
   drawPlusIcon(W - ICON_D, H - ICON_D);
 }
 
@@ -421,14 +385,12 @@ function drawHomeIcon(x, y) {
   let bodyL   = x - half;
   let bodyR   = x + half;
 
-  // V roof
   ctx.beginPath();
   ctx.moveTo(bodyL - ovr, bodyTop);
   ctx.lineTo(x, peakY);
   ctx.lineTo(bodyR + ovr, bodyTop);
   ctx.stroke();
 
-  // Body — 3 sides, no top
   ctx.beginPath();
   ctx.moveTo(bodyL, bodyTop);
   ctx.lineTo(bodyL, bodyBot);
@@ -475,10 +437,9 @@ function getPos(e) {
 
 function onMove(e) {
   e.preventDefault();
-  let p  = getPos(e);
+  let p    = getPos(e);
   pointerX = p.x;
   pointerY = p.y;
-
   if (isPointerDown && state === 'DRAWING' && isInsideBox(p.x, p.y)) {
     let cur = drawings[currentPhase - 1];
     if (cur.length > 0) cur[cur.length - 1].push({ x: p.x, y: p.y });
@@ -488,32 +449,28 @@ function onMove(e) {
 function onDown(e) {
   e.preventDefault();
   isPointerDown = true;
-  let p  = getPos(e);
+  let p    = getPos(e);
   pointerX = p.x;
   pointerY = p.y;
 
   if (state === 'WELCOME') {
     if (isPointerNear(960, 880, HIT_R)) state = 'DRAWING';
   }
-
   else if (state === 'DRAWING') {
     if (isInsideBox(p.x, p.y)) {
       drawings[currentPhase - 1].push([{ x: p.x, y: p.y }]);
     }
-    // RESTART
     if (isPointerInRect(960 - 160 - 20, 970, 160, 44)) {
       drawings[currentPhase - 1] = [];
     }
-    // SEND
     if (isPointerInRect(960 + 20, 970, 160, 44)) {
       if (currentPhase < 3) currentPhase++;
       else state = 'LOADING';
     }
   }
-
   else if (state === 'GALLERY') {
-    if (isPointerNear(ICON_D, H - ICON_D, HIT_R))      { resetDrawing(); state = 'WELCOME'; }
-    if (isPointerNear(W - ICON_D, H - ICON_D, HIT_R))  { resetDrawing(); state = 'DRAWING'; }
+    if (isPointerNear(ICON_D, H - ICON_D, HIT_R))     { resetDrawing(); state = 'WELCOME'; }
+    if (isPointerNear(W - ICON_D, H - ICON_D, HIT_R)) { resetDrawing(); state = 'DRAWING'; }
   }
 }
 
