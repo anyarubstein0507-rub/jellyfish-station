@@ -12,8 +12,11 @@ const ctx    = canvas.getContext('2d');
 const W = 1920;
 const H = 1080;
 
-canvas.width  = W;
-canvas.height = H;
+// Retina/HiDPI: multiply by devicePixelRatio for sharp rendering
+const DPR = window.devicePixelRatio || 1;
+canvas.width  = W * DPR;
+canvas.height = H * DPR;
+ctx.scale(DPR, DPR); // scale once at init so all coords stay in 1920x1080 space
 
 function resize() {
   let s = Math.min(window.innerWidth / W, window.innerHeight / H);
@@ -180,20 +183,20 @@ function drawWelcome() {
   // ── Paragraphs — three columns, all start at Y=430 ────────
   // Column width 500px, centers at 330 / 960 / 1590
 
-  // English — left column, center=330
+  // English — left column, center=330, width=560
   drawText(
     'The Israel Aquarium researches jellyfish reproduction. Anya, a Visual Communications student at Bezalel, created her own \'Reproduction Project\' for a scientific illustration course. You can participate by adding your jellyfish. There is no right or wrong: every observation is unique, and together we create something beautiful.',
-    80, 430, 500, F_REG(20), C_GRAY, 'center', 'ltr');
+    50, 430, 560, F_REG(20), C_GRAY, 'center', 'ltr');
 
-  // Arabic — middle column, center=960
+  // Arabic — middle column, center=960, width=560
   drawText(
     'يقوم الأكواريوم الإسرائيلي بالبحث في عملية تكاثر قناديل البحر. أنيا، طالبة الاتصالات المرئية في بتسلئيل، أنشأت \'مشروع التكاثر\' كجزء من مساق الرسوم التوضيحية العلمية. يمكنك المشاركة في هذا المشروع التفاعلي عن طريق إضافة قنديل البحر الخاص بك إلى ملاحظات الآخرين. تذكر: لا يوجد صح أو خطأ في الملاحظة.',
-    710, 430, 500, F_REG(20), C_GRAY, 'center', 'rtl');
+    680, 430, 560, F_REG(20), C_GRAY, 'center', 'rtl');
 
-  // Hebrew — right column, center=1590
+  // Hebrew — right column, center=1590, width=560
   drawText(
     'האקווריום הישראלי חוקר את תהליך הרבייה של מדוזות. אניה, סטודנטית לתקשורת חזותית בבצלאל, יצרה את \'פרויקט רבייה\' כחלק מקורס איור מדעי. תוכלו לקחת חלק בפרויקט ולהוסיף מדוזה משלכם לתצפיות של אחרים. זכרו: אין נכון או לא נכון בתצפית. לכל אחד מאיתנו חוויה ייחודית, ויחד ניצור משהו יפה.',
-    1340, 430, 500, F_REG(20), C_WHITE, 'center', 'rtl');
+    1310, 430, 560, F_REG(20), C_WHITE, 'center', 'rtl');
 
   // ── Plus / start button at Y=880 ─────────────────────────
   drawPlusIcon(960, 880);
@@ -257,11 +260,11 @@ function drawDrawingScreen() {
   let p = PHASE_TEXT[currentPhase - 1];
 
   // English — left col
-  drawText(p.en, 80,  650, 500, F_REG(18), C_GRAY,  'center', 'ltr');
+  drawText(p.en, 50,  650, 560, F_REG(18), C_GRAY,  'center', 'ltr');
   // Arabic — middle col
-  drawText(p.ar, 710, 650, 500, F_REG(18), C_GRAY,  'center', 'rtl');
+  drawText(p.ar, 680, 650, 560, F_REG(18), C_GRAY,  'center', 'rtl');
   // Hebrew — right col
-  drawText(p.he, 1340, 650, 500, F_REG(18), C_WHITE, 'center', 'rtl');
+  drawText(p.he, 1310, 650, 560, F_REG(18), C_WHITE, 'center', 'rtl');
 
   // Buttons at Y=970
   drawRoundedButton(960 - 160 - 20, 970, 160, 44, 'אתחול', 'RESTART');
