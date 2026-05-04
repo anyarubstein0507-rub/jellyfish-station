@@ -1,69 +1,50 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>תחנת תצפית מדוזות — Israel Aquarium</title>
-    <style>
-        /* 1. Define Fonts */
-        @font-face {
-            font-family: 'Abraham';
-            src: url('Abraham-Regular.otf') format('opentype');
-            font-weight: 400;
-        }
-        @font-face {
-            font-family: 'Abraham';
-            src: url('Abraham-Bold.otf') format('opentype');
-            font-weight: 700;
-        }
-
-        /* 2. Global Reset and Centering Logic */
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-        }
-
-        html, body {
-            width: 100%;
-            height: 100%;
-            background: #000; /* Maintains the deep black background */
-            overflow: hidden; /* Prevents scrolling if text overflows */
-            display: flex;
-            justify-content: center; /* Centers the canvas horizontally */
-            align-items: center;     /* Centers the canvas vertically */
-            cursor: crosshair;
-            touch-action: none;      /* Prevents mobile gestures from interfering with drawing */
-        }
-
-        /* 3. Responsive Canvas Scaling */
-        canvas {
-            display: block;
-            max-width: 100vw;
-            max-height: 100vh;
-            object-fit: contain; /* Ensures the 1920x1080 aspect ratio stays perfect */
-        }
-
-        /* 4. Font Preload Safety */
-        .font-preload {
-            position: absolute;
-            opacity: 0;
-            pointer-events: none;
-            height: 0;
-            width: 0;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>תחנת תצפית מדוזות — Israel Aquarium</title>
+  <style>
+    @font-face {
+      font-family: 'Abraham';
+      src: url('Abraham-Regular.otf') format('opentype');
+      font-weight: 400;
+    }
+    @font-face {
+      font-family: 'Abraham';
+      src: url('Abraham-Bold.otf') format('opentype');
+      font-weight: 700;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: crosshair;
+      touch-action: none;
+    }
+    canvas {
+      display: block;
+      max-width: 100vw;
+      max-height: 100vh;
+    }
+    .font-preload {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+      height: 0;
+      width: 0;
+    }
+  </style>
 </head>
 <body>
-
-    <!-- This forces the browser to download fonts before sketch.js starts drawing -->
-    <div class="font-preload" style="font-family: 'Abraham'; font-weight: 400;">Preload Regular</div>
-    <div class="font-preload" style="font-family: 'Abraham'; font-weight: 700;">Preload Bold</div>
-
-    <canvas id="c"></canvas>
-
-    <!-- Ensure sketch.js is in the same folder -->
-    <script src="sketch.js"></script>
-
+  <div class="font-preload" style="font-family: 'Abraham'; font-weight: 400;">a</div>
+  <div class="font-preload" style="font-family: 'Abraham'; font-weight: 700;">a</div>
+  <canvas id="c"></canvas>
+  <script src="sketch.js"></script>
 </body>
 </html>
