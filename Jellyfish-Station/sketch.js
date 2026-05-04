@@ -48,20 +48,32 @@ const GRID_ROWS  = 4;
 const HEX_OFFSET = 0.5;
 
 const PHASE_FRAMES   = 45;
-const LOADING_FRAMES = 240;
+const LOADING_FRAMES = 360; // 6 seconds at 60fps
 
-let state         = 'WELCOME';
-let currentPhase  = 1;
-let drawings      = [[], [], []];
-let database      = [];
-let isPointerDown = false;
-let frameCount    = 0;
+// Logo height in design px
+const LOGO_H   = 40;
+const LOGO_X   = 50;  // left edge
+const LOGO_Y   = 30;  // top edge
+const LOGO_GAP = 30;  // gap between logos
+
+let state          = 'WELCOME';
+let currentPhase   = 1;
+let drawings       = [[], [], []];
+let database       = [];
+let isPointerDown  = false;
+let frameCount     = 0;
 let loadingCounter = 0;
-let pointerX = -999;
-let pointerY = -999;
+let pointerX       = -999;
+let pointerY       = -999;
 
-const jellyImg = new Image();
-jellyImg.src   = 'Jellyfish_Assets-01.png';
+const jellyImg    = new Image();
+jellyImg.src      = 'Jellyfish_Assets-01.png';
+
+const bezalelImg  = new Image();
+bezalelImg.src    = 'bezalel_white.png';
+
+const aquariumImg = new Image();
+aquariumImg.src   = 'Israel_Aquarium_Logo.png';
 
 const PHASE_TEXT = [
   {
@@ -84,6 +96,22 @@ const PHASE_TEXT = [
 document.fonts.ready.then(() => requestAnimationFrame(loop));
 
 // ============================================================
+// LOGOS — drawn on every screen, top left
+// ============================================================
+function drawLogos() {
+  // Only draw once both images are loaded
+  if (!bezalelImg.complete || !aquariumImg.complete) return;
+
+  // Bezalel — scale to LOGO_H, preserve aspect ratio
+  let bezW = (bezalelImg.naturalWidth / bezalelImg.naturalHeight) * LOGO_H;
+  ctx.drawImage(bezalelImg, LOGO_X, LOGO_Y, bezW, LOGO_H);
+
+  // Aquarium — same height, placed to the right with gap
+  let aqW = (aquariumImg.naturalWidth / aquariumImg.naturalHeight) * LOGO_H;
+  ctx.drawImage(aquariumImg, LOGO_X + bezW + LOGO_GAP, LOGO_Y, aqW, LOGO_H);
+}
+
+// ============================================================
 // MAIN LOOP
 // ============================================================
 function loop() {
@@ -96,45 +124,10 @@ function loop() {
   else if (state === 'LOADING') drawLoading();
   else if (state === 'GALLERY') drawGallery();
 
+  // Logos appear on every screen
+  drawLogos();
+
   requestAnimationFrame(loop);
-}
-
-// ============================================================
-// TEXT
-// ============================================================
-function drawText(str, x, y, maxW, fontStr, color, align, dir) {
-  ctx.save();
-  ctx.font         = fontStr;
-  ctx.fillStyle    = color;
-  ctx.direction    = dir   || 'ltr';
-  ctx.textAlign    = align || 'left';
-  ctx.textBaseline = 'top';
-
-  // For word-wrap, temporarily remove DPR scale from measurement
-  // by measuring in actual canvas pixels then comparing to maxW in design px
-  let sz    = parseFloat(fontStr);
-  let lineH = sz * 1.65;
-  let curY  = y;
-
-  let anchorX = x;
-  if (align === 'center') anchorX = x + maxW / 2;
-  if (align === 'right')  anchorX = x + maxW;
-
-  let words = str.split(' ');
-  let line  = '';
-  for (let w of words) {
-    let test     = line ? line + ' ' + w : w;
-    let measured = ctx.measureText(test).width / DPR;
-    if (measured > maxW && line) {
-      ctx.fillText(line, anchorX, curY);
-      line  = w;
-      curY += lineH;
-    } else {
-      line = test;
-    }
-  }
-  if (line) ctx.fillText(line, anchorX, curY);
-  ctx.restore();
 }
 
 // ============================================================
@@ -142,6 +135,7 @@ function drawText(str, x, y, maxW, fontStr, color, align, dir) {
 // ============================================================
 function drawWelcome() {
   const LH = 32;
+  const PY = 500;
 
   ctx.save();
   ctx.textBaseline = 'top';
@@ -158,9 +152,6 @@ function drawWelcome() {
   ctx.font = F_BOLD(60); ctx.fillStyle = C_GRAY;
   ctx.direction = 'ltr'; ctx.textAlign = 'center';
   ctx.fillText('Jellyfish Observation Station', 960, 320);
-
-  // Paragraphs start at Y=500 — midpoint between title bottom (380) and button (880)
-  const PY = 500;
 
   // English — left-aligned, left edge X=60
   ctx.font = F_REG(20); ctx.fillStyle = C_GRAY;
@@ -201,11 +192,12 @@ function drawWelcome() {
 // SCREEN 2 — DRAWING
 // ============================================================
 const BOX_X = 461;
-const BOX_Y = 54;
+const BOX_Y = 80;
 const BOX_W = 998;
 const BOX_H = 540;
 
 function drawDrawingScreen() {
+  // Bounding box
   ctx.save();
   ctx.strokeStyle = C_DIM;
   ctx.lineWidth   = 1.5;
@@ -214,6 +206,7 @@ function drawDrawingScreen() {
   ctx.stroke();
   ctx.restore();
 
+  // User strokes
   ctx.save();
   ctx.strokeStyle = C_WHITE;
   ctx.lineWidth   = 3;
@@ -235,13 +228,13 @@ function drawDrawingScreen() {
     if (i === currentPhase) {
       ctx.fillStyle = C_WHITE;
       ctx.beginPath();
-      ctx.arc(dx, 624, 4, 0, Math.PI * 2);
+      ctx.arc(dx, 654, 4, 0, Math.PI * 2);
       ctx.fill();
     } else {
       ctx.strokeStyle = C_GRAY;
       ctx.lineWidth   = 1;
       ctx.beginPath();
-      ctx.arc(dx, 624, 4, 0, Math.PI * 2);
+      ctx.arc(dx, 654, 4, 0, Math.PI * 2);
       ctx.stroke();
     }
   }
@@ -249,13 +242,20 @@ function drawDrawingScreen() {
 
   // Instructions
   let p = PHASE_TEXT[currentPhase - 1];
-  drawText(p.en,  50,  650, 560, F_REG(17), C_GRAY,  'center', 'ltr');
-  drawText(p.ar,  680, 650, 560, F_REG(17), C_GRAY,  'center', 'rtl');
-  drawText(p.he, 1310, 650, 560, F_REG(17), C_WHITE, 'center', 'rtl');
+  ctx.save();
+  ctx.textBaseline = 'top';
+  ctx.font = F_REG(17);
+  ctx.fillStyle = C_GRAY;  ctx.direction = 'ltr'; ctx.textAlign = 'left';
+  ctx.fillText(p.en, 60, 680);
+  ctx.fillStyle = C_GRAY;  ctx.direction = 'rtl'; ctx.textAlign = 'right';
+  ctx.fillText(p.ar, 1250, 680);
+  ctx.fillStyle = C_WHITE; ctx.direction = 'rtl'; ctx.textAlign = 'right';
+  ctx.fillText(p.he, 1860, 680);
+  ctx.restore();
 
   // Buttons
-  drawRoundedButton(960 - 160 - 20, 970, 160, 44, 'אתחול', 'RESTART');
-  drawRoundedButton(960 + 20,       970, 160, 44, 'שליחה',  'SEND');
+  drawRoundedButton(960 - 160 - 20, 970, 160, 44, 'להתחיל מחדש', 'Restart');
+  drawRoundedButton(960 + 20,       970, 160, 44, 'שליחה',        'Send');
 }
 
 function drawRoundedButton(x, y, w, h, labelHe, labelEn) {
@@ -270,9 +270,8 @@ function drawRoundedButton(x, y, w, h, labelHe, labelEn) {
   ctx.stroke();
   ctx.restore();
 
-  let fStr = F_REG(14);
   ctx.save();
-  ctx.font = fStr;
+  ctx.font = F_REG(14);
   ctx.direction = 'rtl';
   let heW    = ctx.measureText(labelHe).width / DPR;
   ctx.direction = 'ltr';
@@ -300,15 +299,28 @@ function drawLoading() {
   let yFloat  = Math.sin(frameCount * 0.05) * 18;
   let imgSize = 340;
   if (jellyImg.complete && jellyImg.naturalWidth > 0) {
-    ctx.drawImage(jellyImg, 960 - imgSize / 2, 389 - imgSize / 2 + yFloat, imgSize, imgSize);
+    ctx.drawImage(jellyImg,
+      960 - imgSize / 2,
+      389 - imgSize / 2 + yFloat,
+      imgSize, imgSize);
   }
 
-  drawText('המדוזה שלך עוברת תהליך רבייה ובקרוב תצטרף לאחרות',
-    460, 680, 1000, F_BOLD(30), C_LILAC, 'center', 'rtl');
-  drawText('قنديل البحر الخاص بك يمر بمرحلة التكاثر وسينضم إلى الآخرين قريباً',
-    460, 740, 1000, F_BOLD(30), C_WHITE, 'center', 'rtl');
-  drawText('Your jellyfish is going through a reproduction phase. It will join the others soon.',
-    460, 800, 1000, F_BOLD(30), C_GRAY, 'center', 'ltr');
+  ctx.save();
+  ctx.textBaseline = 'top';
+
+  ctx.font = F_BOLD(30); ctx.fillStyle = C_LILAC;
+  ctx.direction = 'rtl'; ctx.textAlign = 'center';
+  ctx.fillText('המדוזה שלך עוברת תהליך רבייה ובקרוב תצטרף לאחרות', 960, 680);
+
+  ctx.font = F_BOLD(30); ctx.fillStyle = C_WHITE;
+  ctx.direction = 'rtl'; ctx.textAlign = 'center';
+  ctx.fillText('قنديل البحر الخاص بك يمر بمرحلة التكاثر وسينضم إلى الآخرين قريباً', 960, 740);
+
+  ctx.font = F_BOLD(30); ctx.fillStyle = C_GRAY;
+  ctx.direction = 'ltr'; ctx.textAlign = 'center';
+  ctx.fillText('Your jellyfish is going through a reproduction phase. It will join the others soon.', 960, 800);
+
+  ctx.restore();
 
   loadingCounter++;
   if (loadingCounter >= LOADING_FRAMES) {
