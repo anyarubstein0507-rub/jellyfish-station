@@ -159,34 +159,38 @@ function drawWelcome() {
   ctx.direction = 'ltr'; ctx.textAlign = 'center';
   ctx.fillText('Jellyfish Observation Station', 960, 320);
 
-  // English — left-aligned, 5 lines, ~52 chars each
+  // Paragraphs start at Y=500 — midpoint between title bottom (380) and button (880)
+  const PY = 500;
+
+  // English — left-aligned, left edge X=60
   ctx.font = F_REG(20); ctx.fillStyle = C_GRAY;
   ctx.direction = 'ltr'; ctx.textAlign = 'left';
-  ctx.fillText('The Israel Aquarium researches jellyfish reproduction.',   60, 430 + LH * 0);
-  ctx.fillText("Anya, a Visual Communications student at Bezalel,",       60, 430 + LH * 1);
-  ctx.fillText("created her own 'Reproduction Project' for a scientific",  60, 430 + LH * 2);
-  ctx.fillText('illustration course. You can participate by adding your',  60, 430 + LH * 3);
-  ctx.fillText('jellyfish. There is no right or wrong: every observation', 60, 430 + LH * 4);
-  ctx.fillText('is unique, and together we create something beautiful.',   60, 430 + LH * 5);
+  ctx.fillText('The Israel Aquarium researches jellyfish reproduction.',   60, PY + LH * 0);
+  ctx.fillText("Anya, a Visual Communications student at Bezalel,",       60, PY + LH * 1);
+  ctx.fillText("created her own 'Reproduction Project' for a scientific",  60, PY + LH * 2);
+  ctx.fillText('illustration course. You can participate by adding your',  60, PY + LH * 3);
+  ctx.fillText('jellyfish. There is no right or wrong: every observation', 60, PY + LH * 4);
+  ctx.fillText('is unique, and together we create something beautiful.',   60, PY + LH * 5);
 
-  // Arabic — right-aligned, 5 lines, ~40 chars each
+  // Arabic — right-aligned, right edge X=1250
   ctx.font = F_REG(20); ctx.fillStyle = C_GRAY;
   ctx.direction = 'rtl'; ctx.textAlign = 'right';
-  ctx.fillText('يقوم الأكواريوم الإسرائيلي بالبحث في عملية تكاثر قناديل البحر.',  1250, 430 + LH * 0);
-  ctx.fillText('أنيا، طالبة الاتصالات المرئية في بتسلئيل، أنشأت',                 1250, 430 + LH * 1);
-  ctx.fillText('مشروع التكاثر كجزء من مساق الرسوم التوضيحية العلمية.',             1250, 430 + LH * 2);
-  ctx.fillText('يمكنك المشاركة عن طريق إضافة قنديل البحر الخاص بك',               1250, 430 + LH * 3);
-  ctx.fillText('إلى ملاحظات الآخرين. تذكر: لا يوجد صح أو خطأ في الملاحظة.',      1250, 430 + LH * 4);
+  ctx.fillText('يقوم الأكواريوم الإسرائيلي بالبحث في عملية تكاثر قناديل البحر.',        1250, PY + LH * 0);
+  ctx.fillText('أنيا، طالبة الاتصالات المرئية في بتسلئيل، أنشأت مشروع تكاثر',          1250, PY + LH * 1);
+  ctx.fillText('خاصاً بها كجزء من مساق الرسوم التوضيحية العلمية. أنتم مدعوون',          1250, PY + LH * 2);
+  ctx.fillText('للمشاركة في المشروع وإضافة قنديل البحر الخاص بكم. تذكروا',              1250, PY + LH * 3);
+  ctx.fillText('أنه لا يوجد صح أو خطأ في الملاحظة: كل ملاحظة فريدة،',                  1250, PY + LH * 4);
+  ctx.fillText('ومعاً نبتكر شيئاً جميلاً.',                                              1250, PY + LH * 5);
 
-  // Hebrew — right-aligned, 5 lines, ~35 chars each
+  // Hebrew — right-aligned, right edge X=1860
   ctx.font = F_REG(20); ctx.fillStyle = C_WHITE;
   ctx.direction = 'rtl'; ctx.textAlign = 'right';
-  ctx.fillText('האקווריום הישראלי חוקר את תהליך הרבייה של מדוזות.',               1860, 430 + LH * 0);
-  ctx.fillText('אניה, סטודנטית לתקשורת חזותית בבצלאל, יצרה את',                   1860, 430 + LH * 1);
-  ctx.fillText('פרויקט רבייה כחלק מקורס איור מדעי. תוכלו לקחת',                   1860, 430 + LH * 2);
-  ctx.fillText('חלק בפרויקט ולהוסיף מדוזה משלכם לתצפיות של אחרים.',               1860, 430 + LH * 3);
-  ctx.fillText('זכרו: אין נכון או לא נכון. לכל אחד חוויה ייחודית,',               1860, 430 + LH * 4);
-  ctx.fillText('ויחד ניצור משהו יפה.',                                              1860, 430 + LH * 5);
+  ctx.fillText('האקווריום הישראלי חוקר את תהליך הרבייה של מדוזות.',                     1860, PY + LH * 0);
+  ctx.fillText('אניה, סטודנטית לתקשורת חזותית בבצלאל, יצרה פרויקט',                    1860, PY + LH * 1);
+  ctx.fillText('רבייה משלה כחלק מקורס איור מדעי. אתם מוזמנים להשתתף',                  1860, PY + LH * 2);
+  ctx.fillText('בפרויקט ולהוסיף מדוזה משלכם. זכרו שאין נכון או לא נכון',               1860, PY + LH * 3);
+  ctx.fillText('בתצפית: כל תצפית היא ייחודית, ואנחנו יוצרים',                           1860, PY + LH * 4);
+  ctx.fillText('משהו יפה יחד.',                                                          1860, PY + LH * 5);
 
   ctx.restore();
 
