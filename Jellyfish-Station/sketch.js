@@ -4,15 +4,12 @@
 // sketch.js — pure vanilla JS, static hardcoded layout
 // ============================================================
 
-// ── Canvas ───────────────────────────────────────────────────
 const canvas = document.getElementById('c');
 const ctx    = canvas.getContext('2d');
 
-// Internal resolution — all coordinates are in 1920×1080 space
 const W = 1920;
 const H = 1080;
 
-// Retina/HiDPI: multiply by devicePixelRatio for sharp rendering
 const DPR = window.devicePixelRatio || 1;
 canvas.width  = W * DPR;
 canvas.height = H * DPR;
@@ -34,33 +31,25 @@ function toDesign(screenX, screenY) {
   };
 }
 
-// ── Colors ───────────────────────────────────────────────────
 const C_LILAC = 'rgb(156,161,209)';
 const C_WHITE = 'rgb(255,255,255)';
 const C_GRAY  = 'rgb(160,160,160)';
 const C_DIM   = 'rgb(90,90,90)';
 const C_BLACK = 'rgb(0,0,0)';
 
-// ── Fonts ────────────────────────────────────────────────────
 const F_REG  = (sz) => `400 ${sz}px Abraham`;
 const F_BOLD = (sz) => `700 ${sz}px Abraham`;
 
-// ── Icons ────────────────────────────────────────────────────
 const ICON_D = 85;
 const HIT_R  = 60;
 
-// ── Gallery grid ─────────────────────────────────────────────
 const GRID_COLS  = 5;
 const GRID_ROWS  = 4;
 const HEX_OFFSET = 0.5;
 
-// ── Gallery animation: 0.75s per phase at 60fps ──────────────
-const PHASE_FRAMES = 45;
-
-// ── Loading duration: 4 seconds ──────────────────────────────
+const PHASE_FRAMES   = 45;
 const LOADING_FRAMES = 240;
 
-// ── State ────────────────────────────────────────────────────
 let state         = 'WELCOME';
 let currentPhase  = 1;
 let drawings      = [[], [], []];
@@ -68,16 +57,12 @@ let database      = [];
 let isPointerDown = false;
 let frameCount    = 0;
 let loadingCounter = 0;
-
-// ── Pointer position in design space ─────────────────────────
 let pointerX = -999;
 let pointerY = -999;
 
-// ── Jellyfish image ──────────────────────────────────────────
 const jellyImg = new Image();
 jellyImg.src   = 'Jellyfish_Assets-01.png';
 
-// ── Instruction copy ─────────────────────────────────────────
 const PHASE_TEXT = [
   {
     he: 'התבוננו במדוזה. ציירו אותה כשהיא קטנה ועגולה. השתמשו בעיפרון האפור.',
@@ -96,7 +81,6 @@ const PHASE_TEXT = [
   }
 ];
 
-// ── Start after fonts load ───────────────────────────────────
 document.fonts.ready.then(() => requestAnimationFrame(loop));
 
 // ============================================================
@@ -116,7 +100,7 @@ function loop() {
 }
 
 // ============================================================
-// CORE TEXT FUNCTION
+// TEXT
 // ============================================================
 function drawText(str, x, y, maxW, fontStr, color, align, dir) {
   ctx.save();
@@ -126,31 +110,30 @@ function drawText(str, x, y, maxW, fontStr, color, align, dir) {
   ctx.textAlign    = align || 'left';
   ctx.textBaseline = 'top';
 
-  if (!maxW) {
-    ctx.fillText(str, x, y);
-  } else {
-    let sz     = parseFloat(fontStr);
-    let lineH  = sz * 1.65;
-    let curY   = y;
+  // For word-wrap, temporarily remove DPR scale from measurement
+  // by measuring in actual canvas pixels then comparing to maxW in design px
+  let sz    = parseFloat(fontStr);
+  let lineH = sz * 1.65;
+  let curY  = y;
 
-    let anchorX = x;
-    if (align === 'center') anchorX = x + maxW / 2;
-    if (align === 'right')  anchorX = x + maxW;
+  let anchorX = x;
+  if (align === 'center') anchorX = x + maxW / 2;
+  if (align === 'right')  anchorX = x + maxW;
 
-    let words = str.split(' ');
-    let line  = '';
-    for (let w of words) {
-      let test = line ? line + ' ' + w : w;
-      if (ctx.measureText(test).width > maxW && line) {
-        ctx.fillText(line, anchorX, curY);
-        line  = w;
-        curY += lineH;
-      } else {
-        line = test;
-      }
+  let words = str.split(' ');
+  let line  = '';
+  for (let w of words) {
+    let test     = line ? line + ' ' + w : w;
+    let measured = ctx.measureText(test).width / DPR;
+    if (measured > maxW && line) {
+      ctx.fillText(line, anchorX, curY);
+      line  = w;
+      curY += lineH;
+    } else {
+      line = test;
     }
-    if (line) ctx.fillText(line, anchorX, curY);
   }
+  if (line) ctx.fillText(line, anchorX, curY);
   ctx.restore();
 }
 
@@ -166,23 +149,20 @@ function drawWelcome() {
   drawText('Jellyfish Observation Station',
     460, 320, 1000, F_BOLD(60), C_GRAY, 'center', 'ltr');
 
-  // Paragraphs — three columns, Y=430
-  // English — left, center=330
+  // Paragraphs — three columns at Y=430
+  // Each column 560px wide, font 17px
   drawText(
     'The Israel Aquarium researches jellyfish reproduction. Anya, a Visual Communications student at Bezalel, created her own \'Reproduction Project\' for a scientific illustration course. You can participate by adding your jellyfish. There is no right or wrong: every observation is unique, and together we create something beautiful.',
-    50, 430, 580, F_REG(20), C_GRAY, 'center', 'ltr');
+    50, 430, 560, F_REG(17), C_GRAY, 'center', 'ltr');
 
-  // Arabic — middle, center=960
   drawText(
     'يقوم الأكواريوم الإسرائيلي بالبحث في عملية تكاثر قناديل البحر. أنيا، طالبة الاتصالات المرئية في بتسلئيل، أنشأت \'مشروع التكاثر\' كجزء من مساق الرسوم التوضيحية العلمية. يمكنك المشاركة في هذا المشروع التفاعلي عن طريق إضافة قنديل البحر الخاص بك إلى ملاحظات الآخرين. تذكر: لا يوجد صح أو خطأ في الملاحظة.',
-    670, 430, 580, F_REG(20), C_GRAY, 'center', 'rtl');
+    670, 430, 560, F_REG(17), C_GRAY, 'center', 'rtl');
 
-  // Hebrew — right, center=1590
   drawText(
     'האקווריום הישראלי חוקר את תהליך הרבייה של מדוזות. אניה, סטודנטית לתקשורת חזותית בבצלאל, יצרה את \'פרויקט רבייה\' כחלק מקורס איור מדעי. תוכלו לקחת חלק בפרויקט ולהוסיף מדוזה משלכם לתצפיות של אחרים. זכרו: אין נכון או לא נכון בתצפית. לכל אחד מאיתנו חוויה ייחודית, ויחד ניצור משהו יפה.',
-    1290, 430, 580, F_REG(20), C_WHITE, 'center', 'rtl');
+    1290, 430, 560, F_REG(17), C_WHITE, 'center', 'rtl');
 
-  // Plus button
   drawPlusIcon(960, 880);
 }
 
@@ -195,7 +175,6 @@ const BOX_W = 998;
 const BOX_H = 540;
 
 function drawDrawingScreen() {
-  // Bounding box
   ctx.save();
   ctx.strokeStyle = C_DIM;
   ctx.lineWidth   = 1.5;
@@ -204,7 +183,6 @@ function drawDrawingScreen() {
   ctx.stroke();
   ctx.restore();
 
-  // Strokes
   ctx.save();
   ctx.strokeStyle = C_WHITE;
   ctx.lineWidth   = 3;
@@ -219,7 +197,7 @@ function drawDrawingScreen() {
   }
   ctx.restore();
 
-  // Phase dots at Y=624
+  // Phase dots
   ctx.save();
   for (let i = 1; i <= 3; i++) {
     let dx = 960 + (i - 2) * 20;
@@ -238,13 +216,13 @@ function drawDrawingScreen() {
   }
   ctx.restore();
 
-  // Instructions at Y=650
+  // Instructions
   let p = PHASE_TEXT[currentPhase - 1];
-  drawText(p.en,  50, 650, 560, F_REG(18), C_GRAY,  'center', 'ltr');
-  drawText(p.ar, 680, 650, 560, F_REG(18), C_GRAY,  'center', 'rtl');
-  drawText(p.he, 1310, 650, 560, F_REG(18), C_WHITE, 'center', 'rtl');
+  drawText(p.en,  50,  650, 560, F_REG(17), C_GRAY,  'center', 'ltr');
+  drawText(p.ar,  680, 650, 560, F_REG(17), C_GRAY,  'center', 'rtl');
+  drawText(p.he, 1310, 650, 560, F_REG(17), C_WHITE, 'center', 'rtl');
 
-  // Buttons at Y=970
+  // Buttons
   drawRoundedButton(960 - 160 - 20, 970, 160, 44, 'אתחול', 'RESTART');
   drawRoundedButton(960 + 20,       970, 160, 44, 'שליחה',  'SEND');
 }
@@ -265,10 +243,10 @@ function drawRoundedButton(x, y, w, h, labelHe, labelEn) {
   ctx.save();
   ctx.font = fStr;
   ctx.direction = 'rtl';
-  let heW    = ctx.measureText(labelHe).width;
+  let heW    = ctx.measureText(labelHe).width / DPR;
   ctx.direction = 'ltr';
-  let slashW = ctx.measureText(' / ').width;
-  let enW    = ctx.measureText(labelEn).width;
+  let slashW = ctx.measureText(' / ').width / DPR;
+  let enW    = ctx.measureText(labelEn).width / DPR;
   let totalW = heW + slashW + enW;
   let startX = (x + w / 2) - totalW / 2;
   let midY   = y + h / 2;
@@ -397,7 +375,6 @@ function drawHomeIcon(x, y) {
   ctx.lineTo(bodyR, bodyBot);
   ctx.lineTo(bodyR, bodyTop);
   ctx.stroke();
-
   ctx.restore();
 }
 
@@ -474,9 +451,7 @@ function onDown(e) {
   }
 }
 
-function onUp(e) {
-  isPointerDown = false;
-}
+function onUp(e) { isPointerDown = false; }
 
 canvas.addEventListener('mousemove',  onMove, { passive: false });
 canvas.addEventListener('mousedown',  onDown, { passive: false });
