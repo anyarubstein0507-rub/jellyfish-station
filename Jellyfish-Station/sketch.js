@@ -505,15 +505,24 @@ canvas.addEventListener('touchstart', onDown, { passive: false });
 canvas.addEventListener('touchend',   onUp,   { passive: false });
 
 async function addToDatabase() {
-  var cellW = W / GRID_COLS;
-  var cellH = H / GRID_ROWS;
+  // Safe grid area — avoids logos (top) and nav icons (bottom/sides)
+  var GRID_LEFT   = 80;
+  var GRID_TOP    = 90;
+  var GRID_RIGHT  = 1840;
+  var GRID_BOTTOM = 990;
+  var GRID_W      = GRID_RIGHT  - GRID_LEFT;   // 1760
+  var GRID_H      = GRID_BOTTOM - GRID_TOP;    // 900
+
+  var cellW = GRID_W / GRID_COLS;
+  var cellH = GRID_H / GRID_ROWS;
+
   var idx   = database.length % (GRID_COLS * GRID_ROWS);
   var col   = idx % GRID_COLS;
   var row   = Math.floor(idx / GRID_COLS);
 
   var hexShift = (row % 2 === 1) ? cellW * HEX_OFFSET : 0;
-  var cx = (col * cellW + cellW / 2 + hexShift) % W;
-  var cy = row * cellH + cellH / 2;
+  var cx = GRID_LEFT + (col * cellW + cellW / 2 + hexShift) % GRID_W;
+  var cy = GRID_TOP  +  row * cellH + cellH / 2;
 
   var entry = {
     frames:      JSON.parse(JSON.stringify(drawings)),
