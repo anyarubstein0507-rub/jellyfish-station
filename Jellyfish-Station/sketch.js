@@ -33,8 +33,7 @@ function toDesign(screenX, screenY) {
 
 // ── Supabase ─────────────────────────────────────────────────
 const SUPABASE_URL = 'https://qtyahjjeyvrzfrejyfan.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_wIhqeyXica0-P0KNW42bxQ_G50Ikqfh
-';
+const SUPABASE_KEY = 'sb_publishable_wIhqeyXica0-P0KNW42bxQ_G50Ikqfh';
 
 async function saveJellyfish(entry) {
   try {
