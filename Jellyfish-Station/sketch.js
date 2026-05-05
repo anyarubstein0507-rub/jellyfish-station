@@ -31,6 +31,47 @@ function toDesign(screenX, screenY) {
   };
 }
 
+// ── Supabase ─────────────────────────────────────────────────
+const SUPABASE_URL = 'https://qtyahjjeyvrzfrejyfan.supabase.co';
+const SUPABASE_KEY = 'PASTE_YOUR_KEY_HERE';
+
+async function saveJellyfish(entry) {
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/jellyfish`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
+      },
+      body: JSON.stringify({ data: entry })
+    });
+  } catch (e) {
+    console.error('Save failed:', e);
+  }
+}
+
+async function loadJellyfish() {
+  try {
+    // Only load entries from the last 24 hours
+    let since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    let res = await fetch(
+      `${SUPABASE_URL}/rest/v1/jellyfish?created_at=gte.${since}&order=created_at.asc`,
+      {
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+      }
+    );
+    let rows = await res.json();
+    database = rows.map(row => row.data);
+  } catch (e) {
+    console.error('Load failed:', e);
+  }
+}
+
+// ── Colors ───────────────────────────────────────────────────
 const C_LILAC = 'rgb(156,161,209)';
 const C_WHITE = 'rgb(255,255,255)';
 const C_GRAY  = 'rgb(160,160,160)';
@@ -70,6 +111,7 @@ jellyImg.src      = 'Jellyfish_Assets-01.png';
 
 const bezalelImg  = new Image();
 bezalelImg.src    = 'bezalel_white.png';
+
 const aquariumImg = new Image();
 aquariumImg.src   = 'Israel_Aquarium_Logo.png';
 
@@ -91,7 +133,11 @@ const PHASE_TEXT = [
   }
 ];
 
-document.fonts.ready.then(() => requestAnimationFrame(loop));
+// ── Start: load existing jellyfish, then start loop ──────────
+document.fonts.ready.then(async () => {
+  await loadJellyfish();
+  requestAnimationFrame(loop);
+});
 
 // ============================================================
 // LOGOS
@@ -100,7 +146,6 @@ function drawLogos() {
   if (bezalelImg.complete && bezalelImg.naturalWidth > 0) {
     let bezW = (bezalelImg.naturalWidth / bezalelImg.naturalHeight) * LOGO_H;
     ctx.drawImage(bezalelImg, LOGO_X, LOGO_Y, bezW, LOGO_H);
-
     if (aquariumImg.complete && aquariumImg.naturalWidth > 0) {
       let aqW = (aquariumImg.naturalWidth / aquariumImg.naturalHeight) * LOGO_H;
       ctx.drawImage(aquariumImg, LOGO_X + bezW + LOGO_GAP, LOGO_Y, aqW, LOGO_H);
@@ -181,20 +226,13 @@ function drawWelcome() {
 // ============================================================
 // SCREEN 2 — DRAWING
 // ============================================================
-const BOX_X = 461;
-const BOX_Y = 80;
-const BOX_W = 998;
-const BOX_H = 540;
-
-// Dots at Y=654, buttons at Y=970
-// Text midpoint = (654 + 970) / 2 = 812, text is ~17px tall so Y = 812 - 8 = 804
-// But we want equal padding: space above text from dots, space below to buttons
-// Dots bottom = 654+4=658, buttons top = 970
-// Total space = 970 - 658 = 312px. Text at center = 658 + 156 = 814
+const BOX_X  = 461;
+const BOX_Y  = 80;
+const BOX_W  = 998;
+const BOX_H  = 540;
 const INSTR_Y = 814;
 
 function drawDrawingScreen() {
-  // Bounding box
   ctx.save();
   ctx.strokeStyle = C_DIM;
   ctx.lineWidth   = 1.5;
@@ -203,7 +241,6 @@ function drawDrawingScreen() {
   ctx.stroke();
   ctx.restore();
 
-  // User strokes
   ctx.save();
   ctx.strokeStyle = C_WHITE;
   ctx.lineWidth   = 3;
@@ -218,7 +255,6 @@ function drawDrawingScreen() {
   }
   ctx.restore();
 
-  // Phase dots at Y=654
   ctx.save();
   for (let i = 1; i <= 3; i++) {
     let dx = 960 + (i - 2) * 20;
@@ -237,27 +273,18 @@ function drawDrawingScreen() {
   }
   ctx.restore();
 
-  // Instructions — centered between dots (Y=654) and buttons (Y=970)
   let p = PHASE_TEXT[currentPhase - 1];
   ctx.save();
   ctx.font = F_REG(17);
   ctx.textBaseline = 'middle';
-
-  ctx.fillStyle = C_GRAY;
-  ctx.direction = 'ltr'; ctx.textAlign = 'left';
+  ctx.fillStyle = C_GRAY;  ctx.direction = 'ltr'; ctx.textAlign = 'left';
   ctx.fillText(p.en, 60, INSTR_Y);
-
-  ctx.fillStyle = C_GRAY;
-  ctx.direction = 'rtl'; ctx.textAlign = 'right';
+  ctx.fillStyle = C_GRAY;  ctx.direction = 'rtl'; ctx.textAlign = 'right';
   ctx.fillText(p.ar, 1250, INSTR_Y);
-
-  ctx.fillStyle = C_WHITE;
-  ctx.direction = 'rtl'; ctx.textAlign = 'right';
+  ctx.fillStyle = C_WHITE; ctx.direction = 'rtl'; ctx.textAlign = 'right';
   ctx.fillText(p.he, 1860, INSTR_Y);
-
   ctx.restore();
 
-  // Buttons — restart wider to fit Hebrew text
   drawRoundedButton(960 - 220 - 20, 948, 220, 44, 'להתחיל מחדש', 'Restart');
   drawRoundedButton(960 + 20,       948, 160, 44, 'שליחה',        'Send');
 }
@@ -484,7 +511,6 @@ function onDown(e) {
     if (isInsideBox(p.x, p.y)) {
       drawings[currentPhase - 1].push([{ x: p.x, y: p.y }]);
     }
-    // Restart button — wider now at x=960-220-20, w=220
     if (isPointerInRect(960 - 220 - 20, 948, 220, 44)) {
       drawings[currentPhase - 1] = [];
     }
@@ -511,7 +537,7 @@ canvas.addEventListener('touchend',   onUp,   { passive: false });
 // ============================================================
 // DATA
 // ============================================================
-function addToDatabase() {
+async function addToDatabase() {
   let cellW = W / GRID_COLS;
   let cellH = H / GRID_ROWS;
   let idx   = database.length % (GRID_COLS * GRID_ROWS);
@@ -522,7 +548,7 @@ function addToDatabase() {
   let cx = (col * cellW + cellW / 2 + hexShift) % W;
   let cy = row * cellH + cellH / 2;
 
-  database.push({
+  let entry = {
     frames:      JSON.parse(JSON.stringify(drawings)),
     x:           cx + (Math.random() - 0.5) * cellW * 0.44,
     y:           cy + (Math.random() - 0.5) * cellH * 0.44,
@@ -530,7 +556,10 @@ function addToDatabase() {
     speed:       0.018 + Math.random() * 0.02,
     amplitude:   12 + Math.random() * 16,
     phaseOffset: Math.floor(Math.random() * PHASE_FRAMES * 3)
-  });
+  };
+
+  database.push(entry);
+  await saveJellyfish(entry);
 }
 
 function resetDrawing() {
