@@ -27,7 +27,7 @@ function toDesign(screenX, screenY) {
   let rect = canvas.getBoundingClientRect();
   return {
     x: (screenX - rect.left) * (W / rect.width),
-    y: (screenY - rect.top)  * (H / rect.height)
+    y: (screenY - rect.top) * (H / rect.height)
   };
 }
 
@@ -37,12 +37,12 @@ const SUPABASE_KEY = 'sb_publishable_wIhqeyXica0-P0KNW42bxQ_G50Ikqfh';
 
 async function saveJellyfish(entry) {
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/jellyfish`, {
+    await fetch(SUPABASE_URL + '/rest/v1/jellyfish', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'apikey': SUPABASE_KEY,
-        'Authorization': `Bearer ${SUPABASE_KEY}`
+        'Authorization': 'Bearer ' + SUPABASE_KEY
       },
       body: JSON.stringify({ data: entry })
     });
@@ -53,33 +53,31 @@ async function saveJellyfish(entry) {
 
 async function loadJellyfish() {
   try {
-    // Only load entries from the last 24 hours
     let since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     let res = await fetch(
-      `${SUPABASE_URL}/rest/v1/jellyfish?created_at=gte.${since}&order=created_at.asc`,
+      SUPABASE_URL + '/rest/v1/jellyfish?created_at=gte.' + since + '&order=created_at.asc',
       {
         headers: {
           'apikey': SUPABASE_KEY,
-          'Authorization': `Bearer ${SUPABASE_KEY}`
+          'Authorization': 'Bearer ' + SUPABASE_KEY
         }
       }
     );
     let rows = await res.json();
-    database = rows.map(row => row.data);
+    database = rows.map(function(row) { return row.data; });
   } catch (e) {
     console.error('Load failed:', e);
   }
 }
 
-// ── Colors ───────────────────────────────────────────────────
 const C_LILAC = 'rgb(156,161,209)';
 const C_WHITE = 'rgb(255,255,255)';
 const C_GRAY  = 'rgb(160,160,160)';
 const C_DIM   = 'rgb(90,90,90)';
 const C_BLACK = 'rgb(0,0,0)';
 
-const F_REG  = (sz) => `400 ${sz}px Abraham`;
-const F_BOLD = (sz) => `700 ${sz}px Abraham`;
+const F_REG  = function(sz) { return '400 ' + sz + 'px Abraham'; };
+const F_BOLD = function(sz) { return '700 ' + sz + 'px Abraham'; };
 
 const ICON_D = 85;
 const HIT_R  = 60;
@@ -133,15 +131,11 @@ const PHASE_TEXT = [
   }
 ];
 
-// ── Start: load existing jellyfish, then start loop ──────────
-document.fonts.ready.then(async () => {
+document.fonts.ready.then(async function() {
   await loadJellyfish();
   requestAnimationFrame(loop);
 });
 
-// ============================================================
-// LOGOS
-// ============================================================
 function drawLogos() {
   if (bezalelImg.complete && bezalelImg.naturalWidth > 0) {
     let bezW = (bezalelImg.naturalWidth / bezalelImg.naturalHeight) * LOGO_H;
@@ -153,9 +147,6 @@ function drawLogos() {
   }
 }
 
-// ============================================================
-// MAIN LOOP
-// ============================================================
 function loop() {
   frameCount++;
   ctx.fillStyle = C_BLACK;
@@ -170,12 +161,9 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-// ============================================================
-// SCREEN 1 — WELCOME
-// ============================================================
 function drawWelcome() {
-  const LH = 32;
-  const PY = 500;
+  var LH = 32;
+  var PY = 500;
 
   ctx.save();
   ctx.textBaseline = 'top';
@@ -195,41 +183,38 @@ function drawWelcome() {
   ctx.font = F_REG(20); ctx.fillStyle = C_GRAY;
   ctx.direction = 'ltr'; ctx.textAlign = 'left';
   ctx.fillText('The Israel Aquarium researches jellyfish reproduction.',   60, PY + LH * 0);
-  ctx.fillText("Anya, a Visual Communications student at Bezalel,",       60, PY + LH * 1);
-  ctx.fillText("created her own 'Reproduction Project' for a scientific",  60, PY + LH * 2);
-  ctx.fillText('illustration course. You can participate by adding your',  60, PY + LH * 3);
-  ctx.fillText('jellyfish. There is no right or wrong: every observation', 60, PY + LH * 4);
-  ctx.fillText('is unique, and together we create something beautiful.',   60, PY + LH * 5);
+  ctx.fillText('Anya, a Visual Communications student at Bezalel,',       60, PY + LH * 1);
+  ctx.fillText('created her own Reproduction Project for a scientific',   60, PY + LH * 2);
+  ctx.fillText('illustration course. You can participate by adding your', 60, PY + LH * 3);
+  ctx.fillText('jellyfish. There is no right or wrong: every observation',60, PY + LH * 4);
+  ctx.fillText('is unique, and together we create something beautiful.',  60, PY + LH * 5);
 
   ctx.font = F_REG(20); ctx.fillStyle = C_GRAY;
   ctx.direction = 'rtl'; ctx.textAlign = 'right';
-  ctx.fillText('يقوم الأكواريوم الإسرائيلي بالبحث في عملية تكاثر قناديل البحر.',        1250, PY + LH * 0);
-  ctx.fillText('أنيا، طالبة الاتصالات المرئية في بتسلئيل، أنشأت مشروع تكاثر',          1250, PY + LH * 1);
-  ctx.fillText('خاصاً بها كجزء من مساق الرسوم التوضيحية العلمية. أنتم مدعوون',          1250, PY + LH * 2);
-  ctx.fillText('للمشاركة في المشروع وإضافة قنديل البحر الخاص بكم. تذكروا',              1250, PY + LH * 3);
-  ctx.fillText('أنه لا يوجد صح أو خطأ في الملاحظة: كل ملاحظة فريدة،',                  1250, PY + LH * 4);
-  ctx.fillText('ومعاً نبتكر شيئاً جميلاً.',                                              1250, PY + LH * 5);
+  ctx.fillText('يقوم الأكواريوم الإسرائيلي بالبحث في عملية تكاثر قناديل البحر.',    1250, PY + LH * 0);
+  ctx.fillText('أنيا، طالبة الاتصالات المرئية في بتسلئيل، أنشأت مشروع تكاثر',      1250, PY + LH * 1);
+  ctx.fillText('خاصاً بها كجزء من مساق الرسوم التوضيحية العلمية. أنتم مدعوون',      1250, PY + LH * 2);
+  ctx.fillText('للمشاركة في المشروع وإضافة قنديل البحر الخاص بكم. تذكروا',          1250, PY + LH * 3);
+  ctx.fillText('أنه لا يوجد صح أو خطأ في الملاحظة: كل ملاحظة فريدة،',              1250, PY + LH * 4);
+  ctx.fillText('ومعاً نبتكر شيئاً جميلاً.',                                          1250, PY + LH * 5);
 
   ctx.font = F_REG(20); ctx.fillStyle = C_WHITE;
   ctx.direction = 'rtl'; ctx.textAlign = 'right';
-  ctx.fillText('האקווריום הישראלי חוקר את תהליך הרבייה של מדוזות.',                     1860, PY + LH * 0);
-  ctx.fillText('אניה, סטודנטית לתקשורת חזותית בבצלאל, יצרה פרויקט',                    1860, PY + LH * 1);
-  ctx.fillText('רבייה משלה כחלק מקורס איור מדעי. אתם מוזמנים להשתתף',                  1860, PY + LH * 2);
-  ctx.fillText('בפרויקט ולהוסיף מדוזה משלכם. זכרו שאין נכון או לא נכון',               1860, PY + LH * 3);
-  ctx.fillText('בתצפית: כל תצפית היא ייחודית, ואנחנו יוצרים',                           1860, PY + LH * 4);
-  ctx.fillText('משהו יפה יחד.',                                                          1860, PY + LH * 5);
+  ctx.fillText('האקווריום הישראלי חוקר את תהליך הרבייה של מדוזות.',                 1860, PY + LH * 0);
+  ctx.fillText('אניה, סטודנטית לתקשורת חזותית בבצלאל, יצרה פרויקט',                1860, PY + LH * 1);
+  ctx.fillText('רבייה משלה כחלק מקורס איור מדעי. אתם מוזמנים להשתתף',              1860, PY + LH * 2);
+  ctx.fillText('בפרויקט ולהוסיף מדוזה משלכם. זכרו שאין נכון או לא נכון',           1860, PY + LH * 3);
+  ctx.fillText('בתצפית: כל תצפית היא ייחודית, ואנחנו יוצרים',                       1860, PY + LH * 4);
+  ctx.fillText('משהו יפה יחד.',                                                      1860, PY + LH * 5);
 
   ctx.restore();
   drawPlusIcon(960, 880);
 }
 
-// ============================================================
-// SCREEN 2 — DRAWING
-// ============================================================
-const BOX_X  = 461;
-const BOX_Y  = 80;
-const BOX_W  = 998;
-const BOX_H  = 540;
+const BOX_X   = 461;
+const BOX_Y   = 80;
+const BOX_W   = 998;
+const BOX_H   = 540;
 const INSTR_Y = 814;
 
 function drawDrawingScreen() {
@@ -246,18 +231,19 @@ function drawDrawingScreen() {
   ctx.lineWidth   = 3;
   ctx.lineCap     = 'round';
   ctx.lineJoin    = 'round';
-  for (let path of drawings[currentPhase - 1]) {
+  for (var i = 0; i < drawings[currentPhase - 1].length; i++) {
+    var path = drawings[currentPhase - 1][i];
     if (path.length < 2) continue;
     ctx.beginPath();
     ctx.moveTo(path[0].x, path[0].y);
-    for (let i = 1; i < path.length; i++) ctx.lineTo(path[i].x, path[i].y);
+    for (var j = 1; j < path.length; j++) ctx.lineTo(path[j].x, path[j].y);
     ctx.stroke();
   }
   ctx.restore();
 
   ctx.save();
-  for (let i = 1; i <= 3; i++) {
-    let dx = 960 + (i - 2) * 20;
+  for (var i = 1; i <= 3; i++) {
+    var dx = 960 + (i - 2) * 20;
     if (i === currentPhase) {
       ctx.fillStyle = C_WHITE;
       ctx.beginPath();
@@ -273,7 +259,7 @@ function drawDrawingScreen() {
   }
   ctx.restore();
 
-  let p = PHASE_TEXT[currentPhase - 1];
+  var p = PHASE_TEXT[currentPhase - 1];
   ctx.save();
   ctx.font = F_REG(17);
   ctx.textBaseline = 'middle';
@@ -286,12 +272,12 @@ function drawDrawingScreen() {
   ctx.restore();
 
   drawRoundedButton(960 - 220 - 20, 948, 220, 44, 'להתחיל מחדש', 'Restart');
-  drawRoundedButton(960 + 20,       948, 160, 44, 'שליחה',        'Send');
+  drawRoundedButton(960 + 20, 948, 160, 44, 'שליחה', 'Send');
 }
 
 function drawRoundedButton(x, y, w, h, labelHe, labelEn) {
-  let hovered = isPointerInRect(x, y, w, h);
-  let color   = hovered ? C_WHITE : C_GRAY;
+  var hovered = isPointerInRect(x, y, w, h);
+  var color   = hovered ? C_WHITE : C_GRAY;
 
   ctx.save();
   ctx.strokeStyle = color;
@@ -304,13 +290,13 @@ function drawRoundedButton(x, y, w, h, labelHe, labelEn) {
   ctx.save();
   ctx.font = F_REG(14);
   ctx.direction = 'rtl';
-  let heW    = ctx.measureText(labelHe).width / DPR;
+  var heW    = ctx.measureText(labelHe).width / DPR;
   ctx.direction = 'ltr';
-  let slashW = ctx.measureText(' / ').width / DPR;
-  let enW    = ctx.measureText(labelEn).width / DPR;
-  let totalW = heW + slashW + enW;
-  let startX = (x + w / 2) - totalW / 2;
-  let midY   = y + h / 2;
+  var slashW = ctx.measureText(' / ').width / DPR;
+  var enW    = ctx.measureText(labelEn).width / DPR;
+  var totalW = heW + slashW + enW;
+  var startX = (x + w / 2) - totalW / 2;
+  var midY   = y + h / 2;
 
   ctx.fillStyle    = color;
   ctx.textBaseline = 'middle';
@@ -323,17 +309,11 @@ function drawRoundedButton(x, y, w, h, labelHe, labelEn) {
   ctx.restore();
 }
 
-// ============================================================
-// SCREEN 3 — LOADING
-// ============================================================
 function drawLoading() {
-  let yFloat  = Math.sin(frameCount * 0.05) * 18;
-  let imgSize = 340;
+  var yFloat  = Math.sin(frameCount * 0.05) * 18;
+  var imgSize = 340;
   if (jellyImg.complete && jellyImg.naturalWidth > 0) {
-    ctx.drawImage(jellyImg,
-      960 - imgSize / 2,
-      389 - imgSize / 2 + yFloat,
-      imgSize, imgSize);
+    ctx.drawImage(jellyImg, 960 - imgSize / 2, 389 - imgSize / 2 + yFloat, imgSize, imgSize);
   }
 
   ctx.save();
@@ -356,23 +336,21 @@ function drawLoading() {
   loadingCounter++;
   if (loadingCounter >= LOADING_FRAMES) {
     addToDatabase();
-    state          = 'GALLERY';
+    state = 'GALLERY';
     loadingCounter = 0;
   }
 }
 
-// ============================================================
-// SCREEN 4 — GALLERY
-// ============================================================
 function drawGallery() {
-  let drawCX = BOX_X + BOX_W / 2;
-  let drawCY = BOX_Y + BOX_H / 2;
+  var drawCX = BOX_X + BOX_W / 2;
+  var drawCY = BOX_Y + BOX_H / 2;
 
-  for (let jelly of database) {
-    let yFloat   = Math.sin(frameCount * jelly.speed + jelly.seed) * jelly.amplitude;
-    let cycle    = (frameCount + jelly.phaseOffset) % (PHASE_FRAMES * 3);
-    let phaseIdx = Math.floor(cycle / PHASE_FRAMES);
-    let paths    = jelly.frames[phaseIdx];
+  for (var i = 0; i < database.length; i++) {
+    var jelly    = database[i];
+    var yFloat   = Math.sin(frameCount * jelly.speed + jelly.seed) * jelly.amplitude;
+    var cycle    = (frameCount + jelly.phaseOffset) % (PHASE_FRAMES * 3);
+    var phaseIdx = Math.floor(cycle / PHASE_FRAMES);
+    var paths    = jelly.frames[phaseIdx];
     if (!paths || paths.length === 0) continue;
 
     ctx.save();
@@ -383,12 +361,13 @@ function drawGallery() {
     ctx.lineCap     = 'round';
     ctx.lineJoin    = 'round';
 
-    for (let path of paths) {
+    for (var j = 0; j < paths.length; j++) {
+      var path = paths[j];
       if (path.length < 2) continue;
       ctx.beginPath();
       ctx.moveTo(path[0].x - drawCX, path[0].y - drawCY);
-      for (let i = 1; i < path.length; i++) {
-        ctx.lineTo(path[i].x - drawCX, path[i].y - drawCY);
+      for (var k = 1; k < path.length; k++) {
+        ctx.lineTo(path[k].x - drawCX, path[k].y - drawCY);
       }
       ctx.stroke();
     }
@@ -399,12 +378,9 @@ function drawGallery() {
   drawPlusIcon(W - ICON_D, H - ICON_D);
 }
 
-// ============================================================
-// ICONS
-// ============================================================
 function drawPlusIcon(x, y) {
-  let hovered = isPointerNear(x, y, HIT_R);
-  let color   = hovered ? C_WHITE : C_GRAY;
+  var hovered = isPointerNear(x, y, HIT_R);
+  var color   = hovered ? C_WHITE : C_GRAY;
   ctx.save();
   ctx.strokeStyle = color;
   ctx.lineWidth   = 1.5;
@@ -419,23 +395,23 @@ function drawPlusIcon(x, y) {
 }
 
 function drawHomeIcon(x, y) {
-  let hovered = isPointerNear(x, y, HIT_R);
-  let color   = hovered ? C_WHITE : C_GRAY;
+  var hovered = isPointerNear(x, y, HIT_R);
+  var color   = hovered ? C_WHITE : C_GRAY;
   ctx.save();
   ctx.strokeStyle = color;
   ctx.lineWidth   = 1.5;
   ctx.lineCap     = 'round';
   ctx.lineJoin    = 'round';
 
-  let half    = ICON_D * 0.36;
-  let bodyH   = ICON_D * 0.38;
-  let roofH   = ICON_D * 0.28;
-  let ovr     = ICON_D * 0.06;
-  let bodyTop = y - bodyH / 2 + roofH * 0.3;
-  let bodyBot = bodyTop + bodyH;
-  let peakY   = bodyTop - roofH;
-  let bodyL   = x - half;
-  let bodyR   = x + half;
+  var half    = ICON_D * 0.36;
+  var bodyH   = ICON_D * 0.38;
+  var roofH   = ICON_D * 0.28;
+  var ovr     = ICON_D * 0.06;
+  var bodyTop = y - bodyH / 2 + roofH * 0.3;
+  var bodyBot = bodyTop + bodyH;
+  var peakY   = bodyTop - roofH;
+  var bodyL   = x - half;
+  var bodyR   = x + half;
 
   ctx.beginPath();
   ctx.moveTo(bodyL - ovr, bodyTop);
@@ -452,12 +428,9 @@ function drawHomeIcon(x, y) {
   ctx.restore();
 }
 
-// ============================================================
-// HIT TESTING
-// ============================================================
 function isPointerNear(x, y, r) {
-  let dx = pointerX - x;
-  let dy = pointerY - y;
+  var dx = pointerX - x;
+  var dy = pointerY - y;
   return Math.sqrt(dx * dx + dy * dy) < r;
 }
 
@@ -471,11 +444,8 @@ function isInsideBox(x, y) {
          y > BOX_Y && y < BOX_Y + BOX_H;
 }
 
-// ============================================================
-// INPUT — Mouse + Touch
-// ============================================================
 function getPos(e) {
-  let clientX, clientY;
+  var clientX, clientY;
   if (e.touches && e.touches.length > 0) {
     clientX = e.touches[0].clientX;
     clientY = e.touches[0].clientY;
@@ -488,11 +458,11 @@ function getPos(e) {
 
 function onMove(e) {
   e.preventDefault();
-  let p    = getPos(e);
+  var p    = getPos(e);
   pointerX = p.x;
   pointerY = p.y;
   if (isPointerDown && state === 'DRAWING' && isInsideBox(p.x, p.y)) {
-    let cur = drawings[currentPhase - 1];
+    var cur = drawings[currentPhase - 1];
     if (cur.length > 0) cur[cur.length - 1].push({ x: p.x, y: p.y });
   }
 }
@@ -500,7 +470,7 @@ function onMove(e) {
 function onDown(e) {
   e.preventDefault();
   isPointerDown = true;
-  let p    = getPos(e);
+  var p    = getPos(e);
   pointerX = p.x;
   pointerY = p.y;
 
@@ -534,21 +504,18 @@ canvas.addEventListener('touchmove',  onMove, { passive: false });
 canvas.addEventListener('touchstart', onDown, { passive: false });
 canvas.addEventListener('touchend',   onUp,   { passive: false });
 
-// ============================================================
-// DATA
-// ============================================================
 async function addToDatabase() {
-  let cellW = W / GRID_COLS;
-  let cellH = H / GRID_ROWS;
-  let idx   = database.length % (GRID_COLS * GRID_ROWS);
-  let col   = idx % GRID_COLS;
-  let row   = Math.floor(idx / GRID_COLS);
+  var cellW = W / GRID_COLS;
+  var cellH = H / GRID_ROWS;
+  var idx   = database.length % (GRID_COLS * GRID_ROWS);
+  var col   = idx % GRID_COLS;
+  var row   = Math.floor(idx / GRID_COLS);
 
-  let hexShift = (row % 2 === 1) ? cellW * HEX_OFFSET : 0;
-  let cx = (col * cellW + cellW / 2 + hexShift) % W;
-  let cy = row * cellH + cellH / 2;
+  var hexShift = (row % 2 === 1) ? cellW * HEX_OFFSET : 0;
+  var cx = (col * cellW + cellW / 2 + hexShift) % W;
+  var cy = row * cellH + cellH / 2;
 
-  let entry = {
+  var entry = {
     frames:      JSON.parse(JSON.stringify(drawings)),
     x:           cx + (Math.random() - 0.5) * cellW * 0.44,
     y:           cy + (Math.random() - 0.5) * cellH * 0.44,
